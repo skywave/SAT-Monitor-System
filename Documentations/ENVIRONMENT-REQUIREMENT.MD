@@ -1,4 +1,4 @@
-# SAT Monitor – System Environment & Deployment Technical Report
+# **SAT Monitor – System Environment & Deployment (API-First)**
 
 **Project:** SAT Monitor – Yeastar PBX Trunk & Network Monitoring
 **Author:** Intern Team / Skywave Technologies
@@ -9,55 +9,56 @@
 
 ## 1. Purpose
 
-This document provides a **comprehensive, technical description of the system environment** required to deploy and operate the SAT Monitor. It includes:
+This document describes the **system environment required to deploy and operate SAT Monitor** with **vendor-compliant integration**.
 
-* Hardware and virtual infrastructure specifications
-* Software stack requirements
-* Network and PBX integration
-* User access & authentication
+Focus areas:
+
+* Hardware & VM/container specifications
+* Software stack & dependencies
+* Yeastar API integration (primary) & optional AMI
+* Network & user access
 * Security best practices
-* Step-by-step setup and deployment considerations
+* Step-by-step deployment
 
-The goal is to ensure **reliable, low-latency, secure operation** of the monitoring system with **event-driven architecture**.
+Goal: **Reliable, low-latency, secure operation** for **event-driven trunk and network monitoring**.
 
 ---
 
 ## 2. System Architecture Overview
 
-The SAT Monitor environment is composed of three main layers, each deployed on the same VM (or separate VMs in advanced setups):
+SAT Monitor consists of **three main logical layers**, deployable on the same VM or separate VMs:
 
-1. **Collector Service** – AMI listener + ICMP monitoring
-2. **Realtime Gateway** – WebSocket server distributing state changes
-3. **Dashboard (Next.js)** – UI for trunk status, latency metrics, and history
+1. **Collector Service** – Primary Yeastar API connector + optional AMI adapter + ICMP monitoring
+2. **Realtime Gateway** – WebSocket server for distributing state-change events
+3. **Dashboard (Next.js)** – UI for trunk status, latency metrics, and historical data
 
-Additional services: PostgreSQL for storage, Redis for pub/sub (optional), and supporting system utilities (`fping`, Nginx).
+Additional services: PostgreSQL (storage), Redis (optional pub/sub), system utilities (`fping`, Nginx).
 
 ---
 
 ## 3. Server / Host Specifications
 
-| Requirement   | Specification                                 | Notes / Steps                                                                                    |
-| ------------- | --------------------------------------------- | ------------------------------------------------------------------------------------------------ |
-| **Host Type** | Virtual Machine or LXC Container (Proxmox VE) | Recommended: LXC for lightweight containerization; VM for isolation.                             |
-| **OS**        | Ubuntu Server 22.04 LTS                       | Minimal install, no GUI. Update system packages before installation.                             |
-| **CPU**       | 2–4 cores                                     | Depends on number of trunks and ping targets; more cores if >50 trunks.                          |
-| **RAM**       | 4–8 GB                                        | Collector + Gateway + Next.js all in same VM; scale RAM if running multiple monitoring services. |
-| **Disk**      | 20–50 GB                                      | PostgreSQL + logs are append-only; monitor disk usage with cron or Prometheus agent.             |
-| **Network**   | Internal subnet access                        | VM must reach PBX IP(s) and internal admin machines; block public internet access.               |
+| Requirement   | Specification                    | Notes / Steps                                                              |
+| ------------- | -------------------------------- | -------------------------------------------------------------------------- |
+| **Host Type** | VM or LXC Container (Proxmox VE) | LXC recommended for lightweight; VM for strong isolation.                  |
+| **OS**        | Ubuntu Server 22.04 LTS          | Minimal install; no GUI. Update packages.                                  |
+| **CPU**       | 2–4 cores                        | Scale if monitoring >50 trunks or multiple PBXs.                           |
+| **RAM**       | 4–8 GB                           | Scale with number of monitoring services running.                          |
+| **Disk**      | 20–50 GB                         | PostgreSQL + logs are append-only. Monitor usage.                          |
+| **Network**   | Internal subnet access           | Must reach PBXs and internal admin machines; block public internet access. |
 
 **Setup Steps:**
 
-1. Create Ubuntu 22.04 LTS VM in Proxmox.
-2. Assign static IP in internal subnet (e.g., 192.168.x.x).
-3. Allocate CPU and RAM according to above recommendations.
-4. Update OS packages:
+1. Create VM/LXC in Proxmox, assign static IP (e.g., 192.168.x.x)
+2. Allocate CPU & RAM
+3. Update OS:
 
 ```bash
 sudo apt update && sudo apt upgrade -y
 sudo reboot
 ```
 
-5. Install essential tools:
+4. Install essentials:
 
 ```bash
 sudo apt install -y build-essential curl git ufw fail2ban htop
@@ -67,131 +68,79 @@ sudo apt install -y build-essential curl git ufw fail2ban htop
 
 ## 4. Software Stack Requirements
 
-| Component             | Version                     | Purpose                                        | Setup Notes                                                                                |
-| --------------------- | --------------------------- | ---------------------------------------------- | ------------------------------------------------------------------------------------------ |
-| **Node.js**           | 20+                         | Collector, Realtime Gateway, Next.js           | Install via NodeSource or NVM. Ensure `npm` latest.                                        |
-| **PostgreSQL**        | 15+                         | Persistent storage of logs, events, and config | Setup a dedicated DB user; enable `pg_hba.conf` for internal IPs only.                     |
-| **Redis**             | 7+ (optional)               | Pub/Sub for state change events                | Only if using event distribution via Redis; bind to localhost or internal subnet.          |
-| **WebSocket library** | Socket.io                   | Push real-time updates to dashboard            | Installed via `npm` in Gateway service.                                                    |
-| **Task Scheduler**    | Node-cron or systemd timers | Periodic health checks, pings, API snapshots   | Collector service handles cron jobs internally or via systemd service.                     |
-| **Ping Tool**         | fping / iputils-ping        | ICMP monitoring of PBX & network               | Install with `sudo apt install fping iputils-ping`. Must allow ICMP via firewall.          |
-| **Reverse Proxy**     | Nginx (optional)            | Host dashboard and SSL termination             | Recommended for future internal HTTPS dashboard; configure `proxy_pass` to Next.js server. |
-
-**Setup Steps:**
-
-1. Install Node.js 20+:
-
-```bash
-curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
-sudo apt install -y nodejs
-node -v
-npm -v
-```
-
-2. Install PostgreSQL:
-
-```bash
-sudo apt install -y postgresql postgresql-contrib
-sudo systemctl enable postgresql
-sudo systemctl start postgresql
-```
-
-3. Configure PostgreSQL:
-
-* Create DB and user:
-
-```sql
-CREATE USER satmonitor WITH PASSWORD 'strongpassword';
-CREATE DATABASE satmonitor OWNER satmonitor;
-```
-
-* Allow only internal VM connections (`pg_hba.conf`).
-
-4. Install fping:
-
-```bash
-sudo apt install -y fping
-```
-
-5. (Optional) Install Redis:
-
-```bash
-sudo apt install -y redis-server
-sudo systemctl enable redis-server
-sudo systemctl start redis-server
-```
+| Component             | Version                    | Purpose                              | Notes / Setup                                                    |
+| --------------------- | -------------------------- | ------------------------------------ | ---------------------------------------------------------------- |
+| **Node.js**           | 20+                        | Collector, Realtime Gateway, Next.js | Install via NodeSource or NVM. Ensure `npm` latest.              |
+| **PostgreSQL**        | 15+                        | Logs, events, configuration storage  | Dedicated DB user; allow internal IPs only.                      |
+| **Redis**             | 7+ (optional)              | Event pub/sub                        | For gateway communication; bind to localhost or internal subnet. |
+| **WebSocket library** | Socket.io                  | Push real-time updates               | Installed via `npm` in Gateway service.                          |
+| **Task Scheduler**    | Node-cron / systemd timers | Periodic API snapshots, ping checks  | Collector handles scheduling internally or via systemd.          |
+| **Ping Tool**         | fping / iputils-ping       | ICMP monitoring                      | Install and allow ICMP in firewall.                              |
+| **Reverse Proxy**     | Nginx (optional)           | Host dashboard, SSL termination      | Configure `proxy_pass` to Next.js server.                        |
 
 ---
 
-## 5. Yeastar PBX Integration
+## 5. Yeastar PBX Integration (API-First)
 
-**Required credentials and endpoints:**
-
-| Method           | Purpose                        | Notes                                                                 |
-| ---------------- | ------------------------------ | --------------------------------------------------------------------- |
-| AMI              | Event-driven monitoring        | Primary source of truth; credentials stored securely on collector VM. |
-| Yeastar REST API | Periodic snapshot / validation | Secondary; polling every 1–5 min for configuration consistency.       |
+| Method         | Purpose                       | Notes                                                                 |
+| -------------- | ----------------------------- | --------------------------------------------------------------------- |
+| Yeastar API    | Primary monitoring            | Polls trunk & registration status; periodic snapshot for consistency. |
+| AMI (optional) | Event-driven real-time alerts | Only if vendor grants access; integrated as optional future adapter.  |
 
 **Setup Steps:**
 
-1. Request AMI credentials from PBX admin.
-2. Store credentials in `.env` file on VM (never in code). Example:
+1. Obtain API credentials from PBX admin.
+2. Store credentials in `.env` on collector VM:
 
 ```env
-AMI_HOST=192.168.x.x
+API_HOST=https://192.168.x.x
+API_KEY=your_api_key
+AMI_HOST=192.168.x.x      # Optional
 AMI_USER=monitor
 AMI_PASS=strongpassword
-API_HOST=https://192.168.x.x
-API_KEY=apikey
 ```
 
-3. Test AMI connection via Telnet:
+3. Test API connection from collector:
 
 ```bash
-telnet 192.168.x.x 5038
+curl -H "Authorization: Bearer your_api_key" https://192.168.x.x/api/status
 ```
 
-4. Configure firewall to allow only collector VM → PBX (port 5038 for AMI, 80/443 for API if needed).
+4. Configure firewall: allow **collector VM → PBX** (API: 80/443, AMI: 5038 if used)
 
 ---
 
 ## 6. User Access & Authentication
 
-* **Concurrent users:** 10–20 internal admins
-* **Authentication:** Dashboard login via Next.js
-* **RBAC:** Optional; at minimum, read-only for general staff
-
-**Steps:**
-
-1. Create internal user accounts in the dashboard.
-2. Ensure SSL/TLS via internal CA or Nginx reverse proxy.
-3. Restrict access to internal subnet only via firewall.
+* Concurrent users: 10–20 internal admins
+* Dashboard login via Next.js
+* RBAC optional; at minimum, read-only for general staff
+* Access restricted to **internal subnet only**
 
 ---
 
 ## 7. Security Best Practices
 
-* Never expose PBX credentials outside VM
-* Disable public IP access for VM
-* Enable UFW and allow only necessary ports:
+* Never expose PBX credentials externally
+* UFW firewall: allow only necessary ports
 
 ```bash
 sudo ufw allow 22/tcp       # SSH
-sudo ufw allow 3000/tcp     # Next.js dashboard (internal)
-sudo ufw allow 5038/tcp     # AMI
+sudo ufw allow 3000/tcp     # Dashboard
+sudo ufw allow 443/tcp      # HTTPS
+sudo ufw allow 5038/tcp     # AMI (optional)
 sudo ufw enable
 ```
 
-* Enable automatic fail2ban for SSH brute-force protection
-* Configure systemd services with auto-restart for collector and gateway
+* Enable fail2ban
+* Use systemd auto-restart for critical services
+* Store secrets in `.env` (never in code)
 
 ---
 
 ## 8. Services & Deployment Steps
 
-**Step 1:** Collector Service
-
-* Create systemd service: `/etc/systemd/system/collector.service`
+**Collector Service:**
 
 ```ini
 [Unit]
@@ -209,47 +158,29 @@ WorkingDirectory=/opt/sat-monitor/collector
 WantedBy=multi-user.target
 ```
 
-* Enable & start:
-
 ```bash
 sudo systemctl enable collector
 sudo systemctl start collector
 ```
 
-**Step 2:** Realtime Gateway
-
-* Similar systemd service for gateway (`gateway.service`)
-* Connects to collector via Redis or internal socket
-
-**Step 3:** Next.js Dashboard
-
-* Install dependencies: `npm install`
-* Build: `npm run build`
-* Start via systemd or PM2
-
-**Step 4:** Test end-to-end
-
-* AMI event triggers → collector → gateway → dashboard update
-* ICMP monitoring logs and threshold alerts
+**Realtime Gateway** – similar systemd service, connects via Redis or socket
+**Next.js Dashboard** – install deps, build, start via systemd/PM2
+**End-to-end test:** API triggers → collector → gateway → dashboard update → ICMP alerts logged
 
 ---
 
 ## 9. Optional / Advanced Enhancements
 
-* Prometheus + Grafana for historical metrics visualization
-* Dockerized deployment for faster scaling
+* Prometheus + Grafana for metrics
+* Dockerized deployment for multi-PBX scaling
 * SSL for internal dashboard
-* Slack / Email integration for alerts
+* Slack / Email alert integration
 
 ---
 
 ## 10. Conclusion
 
-This environment specification ensures that **SAT Monitor runs reliably, securely, and deterministically**.
-
-By following these steps, the system will:
-
-* Survive UI or service crashes
-* Detect and alert on trunk/network failures
-* Store historical data for reporting and analysis
-* Maintain internal security boundaries
+* **API-first design ensures compliance and reliability**
+* AMI is **optional/future**, making the system **adaptable**
+* Environment supports **multi-PBX scaling** and **secure internal monitoring**
+* System survives crashes, stores historical data, and maintains security boundaries
