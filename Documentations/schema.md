@@ -2,32 +2,22 @@
 
 
 
-Monitor trunks (VoIP lines).
-
-Log ping/status checks (network health).
-
-Store alerts if something goes wrong.
-
-Possibly store users/administrators who view the system.
-
-Keep timestamps of all events.
-
-Track system configuration (optional, e.g., thresholds for alerts).
+-Monitor trunks (VoIP lines).
+-Log ping/status checks (network health).
+-Store alerts if something goes wrong.
+-Possibly store users/administrators who view the system.
+-Keep timestamps of all events.
+-Track system configuration (optional, e.g., thresholds for alerts).
 
 
 
 So the schema should have tables for:
 
 -trunks
-
--ping\_logs
-
--trunk\_status
-
+-ping_logs
+-trunk_status
 -alerts
-
 -users (mandatory)
-
 -settings (optional)
 
 
@@ -36,7 +26,7 @@ So the schema should have tables for:
 
 
 
-Suggested Tables \& Columns
+Suggested Tables & Columns
 
 
 
@@ -45,23 +35,23 @@ Table 1: trunks
 Stores all trunks being monitored.
 
 Column Name	Type	Notes
-trunk\_id	SERIAL PRIMARY KEY	Unique ID for each trunk
+trunk_id	SERIAL PRIMARY KEY	Unique ID for each trunk
 name	VARCHAR(50)	Friendly name for trunk
-ip\_address	VARCHAR(15)	IP of the trunk or endpoint
+ip_address	VARCHAR(15)	IP of the trunk or endpoint
 status	VARCHAR(20)	'up', 'down', 'unknown'
-last\_checked	TIMESTAMP	Last time this trunk was monitored
-created\_at	TIMESTAMP	Default: now()
-updated\_at	TIMESTAMP	Default: now()
+last_checked	TIMESTAMP	Last time this trunk was monitored
+created_at	TIMESTAMP	Default: now()
+updated_at	TIMESTAMP	Default: now()
 
 
 
-Table 2: ping\_logs
+Table 2: ping_logs
 
 Stores ping results for trunks or network devices.
 
 Column Name	Type	Notes
-ping\_id	SERIAL PRIMARY KEY	Unique ID
-trunk\_id	INT REFERENCES trunks(trunk\_id)	Which trunk/device
+ping_id	SERIAL PRIMARY KEY	Unique ID
+trunk_id	INT REFERENCES trunks(trunk\_id)	Which trunk/device
 response\_time\_ms	INT	Round-trip time in milliseconds
 status	VARCHAR(20)	'success', 'timeout', 'failed'
 created\_at	TIMESTAMP	Time of ping
@@ -125,6 +115,7 @@ One-to-Many: trunks → ping\_logs (a trunk has many ping logs)
 One-to-Many: trunks → alerts (a trunk can trigger multiple alerts)
 
 One-to-Many: trunks → trunk\_status (historical status changes)
+
 
 
 
