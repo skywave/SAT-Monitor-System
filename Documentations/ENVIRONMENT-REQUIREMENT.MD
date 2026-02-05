@@ -184,3 +184,5 @@ sudo systemctl start collector
 * AMI is **optional/future**, making the system **adaptable**
 * Environment supports **multi-PBX scaling** and **secure internal monitoring**
 * System survives crashes, stores historical data, and maintains security boundaries
+
+This file have been edited by Miriki
