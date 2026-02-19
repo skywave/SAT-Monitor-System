@@ -1,0 +1,3105 @@
+{
+  "info": {
+    "name": "Yeastar PBX API - SAT Monitor",
+    "description": "Complete Yeastar P-Series API collection with all endpoints",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "System",
+      "item": [
+        {
+          "name": "Get Information",
+          "request": {
+            "method": "GET",
+            "url": "http://localhost:3000/api/system/information"
+          }
+        },
+        {
+          "name": "Get Capacity",
+          "request": {
+            "method": "GET",
+            "url": "http://localhost:3000/api/system/capacity"
+          }
+        },
+        {
+          "name": "Get Menu Options",
+          "request": {
+            "method": "GET",
+            "url": "http://localhost:3000/api/system/menuoptions"
+          }
+        },
+        {
+          "name": "Send Email",
+          "request": {
+            "method": "POST",
+            "url": "http://localhost:3000/api/system/sendemail",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"to\":\"test@example.com\",\"subject\":\"Test\",\"content\":\"Test message\"}"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Extensions",
+      "item": [
+        {
+          "name": "List Extensions",
+          "request": {
+            "method": "GET",
+            "url": "http://localhost:3000/api/extension/list"
+          }
+        },
+        {
+          "name": "Search Extensions",
+          "request": {
+            "method": "POST",
+            "url": "http://localhost:3000/api/extension/search",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"name\":\"John\"}"
+            }
+          }
+        },
+        {
+          "name": "Get Extension",
+          "request": {
+            "method": "POST",
+            "url": "http://localhost:3000/api/extension/get",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"id\":\"1\"}"
+            }
+          }
+        },
+        {
+          "name": "Query Extensions",
+          "request": {
+            "method": "POST",
+            "url": "http://localhost:3000/api/extension/query",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"ids\":[\"1\",\"2\"]}"
+            }
+          }
+        },
+        {
+          "name": "Get Password",
+          "request": {
+            "method": "POST",
+            "url": "http://localhost:3000/api/extension/getpassword",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"id\":\"1\"}"
+            }
+          }
+        },
+        {
+          "name": "Create Extension",
+          "request": {
+            "method": "POST",
+            "url": "http://localhost:3000/api/extension/create",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"number\":\"100\",\"name\":\"Test User\"}"
+            }
+          }
+        },
+        {
+          "name": "Update Extension",
+          "request": {
+            "method": "POST",
+            "url": "http://localhost:3000/api/extension/update",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"id\":\"1\",\"name\":\"Updated Name\"}"
+            }
+          }
+        },
+        {
+          "name": "Delete Extension",
+          "request": {
+            "method": "POST",
+            "url": "http://localhost:3000/api/extension/delete",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"id\":\"1\"}"
+            }
+          }
+        },
+        {
+          "name": "Send Welcome Email",
+          "request": {
+            "method": "POST",
+            "url": "http://localhost:3000/api/extension/send_welcome_email",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"ids\":[\"1\",\"2\"]}"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Organizations",
+      "item": [
+        {
+          "name": "List Organizations",
+          "request": {
+            "method": "GET",
+            "url": "http://localhost:3000/api/organization/list"
+          }
+        },
+        {
+          "name": "Search Organizations",
+          "request": {
+            "method": "POST",
+            "url": "http://localhost:3000/api/organization/search",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"name\":\"Sales\"}"
+            }
+          }
+        },
+        {
+          "name": "Get Organization",
+          "request": {
+            "method": "POST",
+            "url": "http://localhost:3000/api/organization/get",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"id\":\"1\"}"
+            }
+          }
+        },
+        {
+          "name": "Query Organizations",
+          "request": {
+            "method": "POST",
+            "url": "http://localhost:3000/api/organization/query",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"ids\":[\"1\",\"2\"]}"
+            }
+          }
+        },
+        {
+          "name": "Create Organization",
+          "request": {
+            "method": "POST",
+            "url": "http://localhost:3000/api/organization/create",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"name\":\"New Department\"}"
+            }
+          }
+        },
+        {
+          "name": "Update Organization",
+          "request": {
+            "method": "POST",
+            "url": "http://localhost:3000/api/organization/update",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"id\":\"1\",\"name\":\"Updated Name\"}"
+            }
+          }
+        },
+        {
+          "name": "Delete Organization",
+          "request": {
+            "method": "POST",
+            "url": "http://localhost:3000/api/organization/delete",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"id\":\"1\"}"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Trunks",
+      "item": [
+        {
+          "name": "List Trunks",
+          "request": {
+            "method": "GET",
+            "url": "http://localhost:3000/api/trunk/list"
+          }
+        },
+        {
+          "name": "Get ITSP List",
+          "request": {
+            "method": "GET",
+            "url": "http://localhost:3000/api/trunk/itsp_list"
+          }
+        },
+        {
+          "name": "Search Trunks",
+          "request": {
+            "method": "POST",
+            "url": "http://localhost:3000/api/trunk/search",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"name\":\"trunk1\"}"
+            }
+          }
+        },
+        {
+          "name": "Get Trunk",
+          "request": {
+            "method": "POST",
+            "url": "http://localhost:3000/api/trunk/get",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"id\":\"1\"}"
+            }
+          }
+        },
+        {
+          "name": "Query Trunks",
+          "request": {
+            "method": "POST",
+            "url": "http://localhost:3000/api/trunk/query",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"ids\":[\"1\",\"2\"]}"
+            }
+          }
+        },
+        {
+          "name": "Create Trunk",
+          "request": {
+            "method": "POST",
+            "url": "http://localhost:3000/api/trunk/create",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"name\":\"New Trunk\",\"type\":\"sip\"}"
+            }
+          }
+        },
+        {
+          "name": "Update Trunk",
+          "request": {
+            "method": "POST",
+            "url": "http://localhost:3000/api/trunk/update",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"id\":\"1\",\"name\":\"Updated Trunk\"}"
+            }
+          }
+        },
+        {
+          "name": "Delete Trunk",
+          "request": {
+            "method": "POST",
+            "url": "http://localhost:3000/api/trunk/delete",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"id\":\"1\"}"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Contacts & Phonebook",
+      "item": [
+        {
+          "name": "List Company Contacts",
+          "request": {
+            "method": "GET",
+            "url": "http://localhost:3000/api/contact/company/list"
+          }
+        },
+        {
+          "name": "Search Company Contacts",
+          "request": {
+            "method": "POST",
+            "url": "http://localhost:3000/api/contact/company/search",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"name\":\"John\"}"
+            }
+          }
+        },
+        {
+          "name": "Get Company Contact",
+          "request": {
+            "method": "POST",
+            "url": "http://localhost:3000/api/contact/company/get",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"id\":\"1\"}"
+            }
+          }
+        },
+        {
+          "name": "Query Company Contacts",
+          "request": {
+            "method": "POST",
+            "url": "http://localhost:3000/api/contact/company/query",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"ids\":[\"1\",\"2\"]}"
+            }
+          }
+        },
+        {
+          "name": "Create Company Contact",
+          "request": {
+            "method": "POST",
+            "url": "http://localhost:3000/api/contact/company/create",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"name\":\"John Doe\",\"phone\":\"1234567890\"}"
+            }
+          }
+        },
+        {
+          "name": "Update Company Contact",
+          "request": {
+            "method": "POST",
+            "url": "http://localhost:3000/api/contact/company/update",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"id\":\"1\",\"name\":\"Updated Name\"}"
+            }
+          }
+        },
+        {
+          "name": "Delete Company Contact",
+          "request": {
+            "method": "POST",
+            "url": "http://localhost:3000/api/contact/company/delete",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"id\":\"1\"}"
+            }
+          }
+        },
+        {
+          "name": "List Phonebooks",
+          "request": {
+            "method": "GET",
+            "url": "http://localhost:3000/api/contact/phonebook/list"
+          }
+        },
+        {
+          "name": "Search Phonebooks",
+          "request": {
+            "method": "POST",
+            "url": "http://localhost:3000/api/contact/phonebook/search",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"name\":\"Personal\"}"
+            }
+          }
+        },
+        {
+          "name": "Get Phonebook",
+          "request": {
+            "method": "POST",
+            "url": "http://localhost:3000/api/contact/phonebook/get",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"id\":\"1\"}"
+            }
+          }
+        },
+        {
+          "name": "Query Phonebooks",
+          "request": {
+            "method": "POST",
+            "url": "http://localhost:3000/api/contact/phonebook/query",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"ids\":[\"1\",\"2\"]}"
+            }
+          }
+        },
+        {
+          "name": "Create Phonebook",
+          "request": {
+            "method": "POST",
+            "url": "http://localhost:3000/api/contact/phonebook/create",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"name\":\"Work Contacts\"}"
+            }
+          }
+        },
+        {
+          "name": "Update Phonebook",
+          "request": {
+            "method": "POST",
+            "url": "http://localhost:3000/api/contact/phonebook/update",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"id\":\"1\",\"name\":\"Updated Name\"}"
+            }
+          }
+        },
+        {
+          "name": "Delete Phonebook",
+          "request": {
+            "method": "POST",
+            "url": "http://localhost:3000/api/contact/phonebook/delete",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"id\":\"1\"}"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Call Routing",
+      "item": [
+        {
+          "name": "List Inbound Routes",
+          "request": {
+            "method": "GET",
+            "url": "http://localhost:3000/api/route/inbound/list"
+          }
+        },
+        {
+          "name": "Search Inbound Routes",
+          "request": {
+            "method": "POST",
+            "url": "http://localhost:3000/api/route/inbound/search",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"name\":\"Main\"}"
+            }
+          }
+        },
+        {
+          "name": "Get Inbound Route",
+          "request": {
+            "method": "POST",
+            "url": "http://localhost:3000/api/route/inbound/get",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"id\":\"1\"}"
+            }
+          }
+        },
+        {
+          "name": "Query Inbound Routes",
+          "request": {
+            "method": "POST",
+            "url": "http://localhost:3000/api/route/inbound/query",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"ids\":[\"1\",\"2\"]}"
+            }
+          }
+        },
+        {
+          "name": "Create Inbound Route",
+          "request": {
+            "method": "POST",
+            "url": "http://localhost:3000/api/route/inbound/create",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"name\":\"New Route\"}"
+            }
+          }
+        },
+        {
+          "name": "Update Inbound Route",
+          "request": {
+            "method": "POST",
+            "url": "http://localhost:3000/api/route/inbound/update",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"id\":\"1\",\"name\":\"Updated\"}"
+            }
+          }
+        },
+        {
+          "name": "Delete Inbound Route",
+          "request": {
+            "method": "POST",
+            "url": "http://localhost:3000/api/route/inbound/delete",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"id\":\"1\"}"
+            }
+          }
+        },
+        {
+          "name": "List Outbound Routes",
+          "request": {
+            "method": "GET",
+            "url": "http://localhost:3000/api/route/outbound/list"
+          }
+        },
+        {
+          "name": "Search Outbound Routes",
+          "request": {
+            "method": "POST",
+            "url": "http://localhost:3000/api/route/outbound/search",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"name\":\"International\"}"
+            }
+          }
+        },
+        {
+          "name": "Get Outbound Route",
+          "request": {
+            "method": "POST",
+            "url": "http://localhost:3000/api/route/outbound/get",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"id\":\"1\"}"
+            }
+          }
+        },
+        {
+          "name": "Query Outbound Routes",
+          "request": {
+            "method": "POST",
+            "url": "http://localhost:3000/api/route/outbound/query",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"ids\":[\"1\",\"2\"]}"
+            }
+          }
+        },
+        {
+          "name": "Create Outbound Route",
+          "request": {
+            "method": "POST",
+            "url": "http://localhost:3000/api/route/outbound/create",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"name\":\"New Route\"}"
+            }
+          }
+        },
+        {
+          "name": "Update Outbound Route",
+          "request": {
+            "method": "POST",
+            "url": "http://localhost:3000/api/route/outbound/update",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"id\":\"1\",\"name\":\"Updated\"}"
+            }
+          }
+        },
+        {
+          "name": "Delete Outbound Route",
+          "request": {
+            "method": "POST",
+            "url": "http://localhost:3000/api/route/outbound/delete",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"id\":\"1\"}"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Voicemail",
+      "item": [
+        {
+          "name": "Query Voicemails",
+          "request": {
+            "method": "POST",
+            "url": "http://localhost:3000/api/voicemail/query",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"page\":1,\"page_size\":20}"
+            }
+          }
+        },
+        {
+          "name": "Get Voicemail",
+          "request": {
+            "method": "POST",
+            "url": "http://localhost:3000/api/voicemail/get",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"id\":\"1\"}"
+            }
+          }
+        },
+        {
+          "name": "Download Voicemail",
+          "request": {
+            "method": "POST",
+            "url": "http://localhost:3000/api/voicemail/download",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"id\":\"1\"}"
+            }
+          }
+        },
+        {
+          "name": "Create Voicemail",
+          "request": {
+            "method": "POST",
+            "url": "http://localhost:3000/api/voicemail/create",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"extension_id\":\"100\"}"
+            }
+          }
+        },
+        {
+          "name": "Update Voicemail",
+          "request": {
+            "method": "POST",
+            "url": "http://localhost:3000/api/voicemail/update",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"id\":\"1\",\"read_status\":\"read\"}"
+            }
+          }
+        },
+        {
+          "name": "Delete Voicemail",
+          "request": {
+            "method": "POST",
+            "url": "http://localhost:3000/api/voicemail/delete",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"id\":\"1\"}"
+            }
+          }
+        },
+        {
+          "name": "Delete Extension Voicemails",
+          "request": {
+            "method": "POST",
+            "url": "http://localhost:3000/api/voicemail/delete_extension_vm",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"extension_id\":\"100\"}"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "IVR & Queue",
+      "item": [
+        {
+          "name": "List IVRs",
+          "request": {
+            "method": "GET",
+            "url": "http://localhost:3000/api/ivr/list"
+          }
+        },
+        {
+          "name": "Search IVRs",
+          "request": {
+            "method": "POST",
+            "url": "http://localhost:3000/api/ivr/search",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"name\":\"Main IVR\"}"
+            }
+          }
+        },
+        {
+          "name": "Get IVR",
+          "request": {
+            "method": "POST",
+            "url": "http://localhost:3000/api/ivr/get",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"id\":\"1\"}"
+            }
+          }
+        },
+        {
+          "name": "Query IVRs",
+          "request": {
+            "method": "POST",
+            "url": "http://localhost:3000/api/ivr/query",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"ids\":[\"1\",\"2\"]}"
+            }
+          }
+        },
+        {
+          "name": "Create IVR",
+          "request": {
+            "method": "POST",
+            "url": "http://localhost:3000/api/ivr/create",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"name\":\"New IVR\"}"
+            }
+          }
+        },
+        {
+          "name": "Update IVR",
+          "request": {
+            "method": "POST",
+            "url": "http://localhost:3000/api/ivr/update",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"id\":\"1\",\"name\":\"Updated\"}"
+            }
+          }
+        },
+        {
+          "name": "Delete IVR",
+          "request": {
+            "method": "POST",
+            "url": "http://localhost:3000/api/ivr/delete",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"id\":\"1\"}"
+            }
+          }
+        },
+        {
+          "name": "List Queues",
+          "request": {
+            "method": "GET",
+            "url": "http://localhost:3000/api/queue/list"
+          }
+        },
+        {
+          "name": "Search Queues",
+          "request": {
+            "method": "POST",
+            "url": "http://localhost:3000/api/queue/search",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"name\":\"Support\"}"
+            }
+          }
+        },
+        {
+          "name": "Get Queue",
+          "request": {
+            "method": "POST",
+            "url": "http://localhost:3000/api/queue/get",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"id\":\"1\"}"
+            }
+          }
+        },
+        {
+          "name": "Query Queues",
+          "request": {
+            "method": "POST",
+            "url": "http://localhost:3000/api/queue/query",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"ids\":[\"1\",\"2\"]}"
+            }
+          }
+        },
+        {
+          "name": "Create Queue",
+          "request": {
+            "method": "POST",
+            "url": "http://localhost:3000/api/queue/create",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"name\":\"New Queue\"}"
+            }
+          }
+        },
+        {
+          "name": "Update Queue",
+          "request": {
+            "method": "POST",
+            "url": "http://localhost:3000/api/queue/update",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"id\":\"1\",\"name\":\"Updated\"}"
+            }
+          }
+        },
+        {
+          "name": "Delete Queue",
+          "request": {
+            "method": "POST",
+            "url": "http://localhost:3000/api/queue/delete",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"id\":\"1\"}"
+            }
+          }
+        },
+        {
+          "name": "Queue Call Status",
+          "request": {
+            "method": "POST",
+            "url": "http://localhost:3000/api/queue/call_status",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"queue_id\":\"1\"}"
+            }
+          }
+        },
+        {
+          "name": "Queue Agent Status",
+          "request": {
+            "method": "POST",
+            "url": "http://localhost:3000/api/queue/agent_status",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"queue_id\":\"1\"}"
+            }
+          }
+        },
+        {
+          "name": "Queue Pause Reason List",
+          "request": {
+            "method": "GET",
+            "url": "http://localhost:3000/api/queue/pause_reason/list"
+          }
+        },
+        {
+          "name": "Update Queue Pause Reason",
+          "request": {
+            "method": "POST",
+            "url": "http://localhost:3000/api/queue/pause_reason/update",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"reasons\":[]}"
+            }
+          }
+        },
+        {
+          "name": "Get Queue Options",
+          "request": {
+            "method": "GET",
+            "url": "http://localhost:3000/api/queue/option/get"
+          }
+        },
+        {
+          "name": "Update Queue Options",
+          "request": {
+            "method": "POST",
+            "url": "http://localhost:3000/api/queue/option/update",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            }
+          }
+        },
+        {
+          "name": "Honor Wrapup Time",
+          "request": {
+            "method": "POST",
+            "url": "http://localhost:3000/api/queue/honor_wrapup_time",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"enable\":true}"
+            }
+          }
+        },
+        {
+          "name": "Queue Agent Login",
+          "request": {
+            "method": "POST",
+            "url": "http://localhost:3000/api/queue/agent_login",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            }
+          }
+        },
+        {
+          "name": "Queue Agent Pause",
+          "request": {
+            "method": "POST",
+            "url": "http://localhost:3000/api/queue/agent_pause",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            }
+          }
+        },
+        {
+          "name": "Agent Login",
+          "request": {
+            "method": "POST",
+            "url": "http://localhost:3000/api/agent/login",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            }
+          }
+        },
+        {
+          "name": "Agent Pause",
+          "request": {
+            "method": "POST",
+            "url": "http://localhost:3000/api/agent/pause",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Conference & Paging",
+      "item": [
+        {
+          "name": "List Conferences",
+          "request": {
+            "method": "GET",
+            "url": "http://localhost:3000/api/conference/list"
+          }
+        },
+        {
+          "name": "Search Conferences",
+          "request": {
+            "method": "POST",
+            "url": "http://localhost:3000/api/conference/search",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"name\":\"Weekly\"}"
+            }
+          }
+        },
+        {
+          "name": "Get Conference",
+          "request": {
+            "method": "POST",
+            "url": "http://localhost:3000/api/conference/get",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"id\":\"1\"}"
+            }
+          }
+        },
+        {
+          "name": "Query Conferences",
+          "request": {
+            "method": "POST",
+            "url": "http://localhost:3000/api/conference/query",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"ids\":[\"1\",\"2\"]}"
+            }
+          }
+        },
+        {
+          "name": "Query Interim Conferences",
+          "request": {
+            "method": "GET",
+            "url": "http://localhost:3000/api/conference/query_interim"
+          }
+        },
+        {
+          "name": "View Password",
+          "request": {
+            "method": "POST",
+            "url": "http://localhost:3000/api/conference/viewpassword",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"id\":\"1\"}"
+            }
+          }
+        },
+        {
+          "name": "Query Ongoing Conferences",
+          "request": {
+            "method": "POST",
+            "url": "http://localhost:3000/api/conference/query_ongoing",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            }
+          }
+        },
+        {
+          "name": "Create Conference",
+          "request": {
+            "method": "POST",
+            "url": "http://localhost:3000/api/conference/create",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"name\":\"New Conference\"}"
+            }
+          }
+        },
+        {
+          "name": "Start Interim Conference",
+          "request": {
+            "method": "POST",
+            "url": "http://localhost:3000/api/conference/start_interim",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            }
+          }
+        },
+        {
+          "name": "Invite Member",
+          "request": {
+            "method": "POST",
+            "url": "http://localhost:3000/api/conference/invite_member",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"conference_id\":\"1\",\"member\":\"100\"}"
+            }
+          }
+        },
+        {
+          "name": "Kick Member",
+          "request": {
+            "method": "POST",
+            "url": "http://localhost:3000/api/conference/kick_member",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"conference_id\":\"1\",\"member\":\"100\"}"
+            }
+          }
+        },
+        {
+          "name": "Mute Member",
+          "request": {
+            "method": "POST",
+            "url": "http://localhost:3000/api/conference/mute_member",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"conference_id\":\"1\",\"member\":\"100\"}"
+            }
+          }
+        },
+        {
+          "name": "Unmute Member",
+          "request": {
+            "method": "POST",
+            "url": "http://localhost:3000/api/conference/unmute_member",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"conference_id\":\"1\",\"member\":\"100\"}"
+            }
+          }
+        },
+        {
+          "name": "Update Conference",
+          "request": {
+            "method": "POST",
+            "url": "http://localhost:3000/api/conference/update",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"id\":\"1\",\"name\":\"Updated\"}"
+            }
+          }
+        },
+        {
+          "name": "Delete Conference",
+          "request": {
+            "method": "POST",
+            "url": "http://localhost:3000/api/conference/delete",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"id\":\"1\"}"
+            }
+          }
+        },
+        {
+          "name": "List Paging",
+          "request": {
+            "method": "GET",
+            "url": "http://localhost:3000/api/conference/paging/list"
+          }
+        },
+        {
+          "name": "Search Paging",
+          "request": {
+            "method": "POST",
+            "url": "http://localhost:3000/api/conference/paging/search",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"name\":\"Emergency\"}"
+            }
+          }
+        },
+        {
+          "name": "Get Paging",
+          "request": {
+            "method": "POST",
+            "url": "http://localhost:3000/api/conference/paging/get",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"id\":\"1\"}"
+            }
+          }
+        },
+        {
+          "name": "Query Paging",
+          "request": {
+            "method": "POST",
+            "url": "http://localhost:3000/api/conference/paging/query",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"ids\":[\"1\",\"2\"]}"
+            }
+          }
+        },
+        {
+          "name": "Create Paging",
+          "request": {
+            "method": "POST",
+            "url": "http://localhost:3000/api/conference/paging/create",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"name\":\"New Paging\"}"
+            }
+          }
+        },
+        {
+          "name": "Update Paging",
+          "request": {
+            "method": "POST",
+            "url": "http://localhost:3000/api/conference/paging/update",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"id\":\"1\",\"name\":\"Updated\"}"
+            }
+          }
+        },
+        {
+          "name": "Delete Paging",
+          "request": {
+            "method": "POST",
+            "url": "http://localhost:3000/api/conference/paging/delete",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"id\":\"1\"}"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Call Control",
+      "item": [
+        {
+          "name": "Query Calls",
+          "request": {
+            "method": "POST",
+            "url": "http://localhost:3000/api/call/query",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            }
+          }
+        },
+        {
+          "name": "Dial",
+          "request": {
+            "method": "POST",
+            "url": "http://localhost:3000/api/call/dial",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"caller\":\"100\",\"callee\":\"200\"}"
+            }
+          }
+        },
+        {
+          "name": "Accept Inbound",
+          "request": {
+            "method": "POST",
+            "url": "http://localhost:3000/api/call/accept_inbound",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"call_id\":\"1\"}"
+            }
+          }
+        },
+        {
+          "name": "Refuse Inbound",
+          "request": {
+            "method": "POST",
+            "url": "http://localhost:3000/api/call/refuse_inbound",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"call_id\":\"1\"}"
+            }
+          }
+        },
+        {
+          "name": "Listen",
+          "request": {
+            "method": "POST",
+            "url": "http://localhost:3000/api/call/listen",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            }
+          }
+        },
+        {
+          "name": "Hold",
+          "request": {
+            "method": "POST",
+            "url": "http://localhost:3000/api/call/hold",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"call_id\":\"1\"}"
+            }
+          }
+        },
+        {
+          "name": "Unhold",
+          "request": {
+            "method": "POST",
+            "url": "http://localhost:3000/api/call/unhold",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"call_id\":\"1\"}"
+            }
+          }
+        },
+        {
+          "name": "Mute",
+          "request": {
+            "method": "POST",
+            "url": "http://localhost:3000/api/call/mute",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"call_id\":\"1\"}"
+            }
+          }
+        },
+        {
+          "name": "Unmute",
+          "request": {
+            "method": "POST",
+            "url": "http://localhost:3000/api/call/unmute",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"call_id\":\"1\"}"
+            }
+          }
+        },
+        {
+          "name": "Park",
+          "request": {
+            "method": "POST",
+            "url": "http://localhost:3000/api/call/park",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"call_id\":\"1\"}"
+            }
+          }
+        },
+        {
+          "name": "Park Status",
+          "request": {
+            "method": "GET",
+            "url": "http://localhost:3000/api/call/park_status"
+          }
+        },
+        {
+          "name": "Forward to Voicemail",
+          "request": {
+            "method": "POST",
+            "url": "http://localhost:3000/api/call/forward_to_voicemail",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            }
+          }
+        },
+        {
+          "name": "Transfer",
+          "request": {
+            "method": "POST",
+            "url": "http://localhost:3000/api/call/transfer",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            }
+          }
+        },
+        {
+          "name": "Add Member",
+          "request": {
+            "method": "POST",
+            "url": "http://localhost:3000/api/call/add_member",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            }
+          }
+        },
+        {
+          "name": "Play Prompt",
+          "request": {
+            "method": "POST",
+            "url": "http://localhost:3000/api/call/play_prompt",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            }
+          }
+        },
+        {
+          "name": "Hangup",
+          "request": {
+            "method": "POST",
+            "url": "http://localhost:3000/api/call/hangup",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"call_id\":\"1\"}"
+            }
+          }
+        },
+        {
+          "name": "Record Start",
+          "request": {
+            "method": "POST",
+            "url": "http://localhost:3000/api/call/record_start",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"call_id\":\"1\"}"
+            }
+          }
+        },
+        {
+          "name": "Record Pause",
+          "request": {
+            "method": "POST",
+            "url": "http://localhost:3000/api/call/record_pause",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"call_id\":\"1\"}"
+            }
+          }
+        },
+        {
+          "name": "Record Unpause",
+          "request": {
+            "method": "POST",
+            "url": "http://localhost:3000/api/call/record_unpause",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"call_id\":\"1\"}"
+            }
+          }
+        },
+        {
+          "name": "uaCSTA Accept",
+          "request": {
+            "method": "POST",
+            "url": "http://localhost:3000/api/call/uacsta/accept",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            }
+          }
+        },
+        {
+          "name": "uaCSTA Refuse",
+          "request": {
+            "method": "POST",
+            "url": "http://localhost:3000/api/call/uacsta/refuse",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            }
+          }
+        },
+        {
+          "name": "uaCSTA Hangup",
+          "request": {
+            "method": "POST",
+            "url": "http://localhost:3000/api/call/uacsta/hangup",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            }
+          }
+        },
+        {
+          "name": "Get Call Notes",
+          "request": {
+            "method": "POST",
+            "url": "http://localhost:3000/api/call/notes/get",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"call_id\":\"1\"}"
+            }
+          }
+        },
+        {
+          "name": "Update Call Notes",
+          "request": {
+            "method": "POST",
+            "url": "http://localhost:3000/api/call/notes/update",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"call_id\":\"1\",\"notes\":\"Test note\"}"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Recording & CDR",
+      "item": [
+        {
+          "name": "List Recordings",
+          "request": {
+            "method": "GET",
+            "url": "http://localhost:3000/api/recording/list"
+          }
+        },
+        {
+          "name": "Search Recordings",
+          "request": {
+            "method": "POST",
+            "url": "http://localhost:3000/api/recording/search",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            }
+          }
+        },
+        {
+          "name": "Download Recording",
+          "request": {
+            "method": "POST",
+            "url": "http://localhost:3000/api/recording/download",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"id\":\"1\"}"
+            }
+          }
+        },
+        {
+          "name": "Play to Extension",
+          "request": {
+            "method": "POST",
+            "url": "http://localhost:3000/api/recording/playtoextension",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"id\":\"1\",\"extension_id\":\"100\"}"
+            }
+          }
+        },
+        {
+          "name": "Get Auto Record",
+          "request": {
+            "method": "GET",
+            "url": "http://localhost:3000/api/autorecord/get"
+          }
+        },
+        {
+          "name": "Update Auto Record",
+          "request": {
+            "method": "POST",
+            "url": "http://localhost:3000/api/autorecord/update",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            }
+          }
+        },
+        {
+          "name": "List CDRs",
+          "request": {
+            "method": "GET",
+            "url": "http://localhost:3000/api/cdr/list"
+          }
+        },
+        {
+          "name": "Search CDRs",
+          "request": {
+            "method": "POST",
+            "url": "http://localhost:3000/api/cdr/search",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            }
+          }
+        },
+        {
+          "name": "Download CDR",
+          "request": {
+            "method": "POST",
+            "url": "http://localhost:3000/api/cdr/download",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            }
+          }
+        },
+        {
+          "name": "Get CDR Options",
+          "request": {
+            "method": "GET",
+            "url": "http://localhost:3000/api/cdr/getoption"
+          }
+        },
+        {
+          "name": "Update CDR Options",
+          "request": {
+            "method": "POST",
+            "url": "http://localhost:3000/api/cdr/updateoption",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            }
+          }
+        },
+        {
+          "name": "List Call Reports",
+          "request": {
+            "method": "POST",
+            "url": "http://localhost:3000/api/callreport/list",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            }
+          }
+        },
+        {
+          "name": "Call Report Detail",
+          "request": {
+            "method": "POST",
+            "url": "http://localhost:3000/api/callreport/detail",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            }
+          }
+        },
+        {
+          "name": "Download Call Report",
+          "request": {
+            "method": "POST",
+            "url": "http://localhost:3000/api/callreport/download",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            }
+          }
+        },
+        {
+          "name": "List Schedule Reports",
+          "request": {
+            "method": "GET",
+            "url": "http://localhost:3000/api/callreport/schedule/list"
+          }
+        },
+        {
+          "name": "Download Schedule Report",
+          "request": {
+            "method": "POST",
+            "url": "http://localhost:3000/api/callreport/schedule/download",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"id\":\"1\"}"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Hotel",
+      "item": [
+        {
+          "name": "List Wake-up Calls",
+          "request": {
+            "method": "GET",
+            "url": "http://localhost:3000/api/hotel/wakeupcall/list"
+          }
+        },
+        {
+          "name": "Get Wake-up Call",
+          "request": {
+            "method": "POST",
+            "url": "http://localhost:3000/api/hotel/wakeupcall/get",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"extension_id\":\"100\"}"
+            }
+          }
+        },
+        {
+          "name": "Query Wake-up Calls",
+          "request": {
+            "method": "POST",
+            "url": "http://localhost:3000/api/hotel/wakeupcall/query",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"extension_ids\":[\"100\",\"101\"]}"
+            }
+          }
+        },
+        {
+          "name": "Create Wake-up Call",
+          "request": {
+            "method": "POST",
+            "url": "http://localhost:3000/api/hotel/wakeupcall/create",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            }
+          }
+        },
+        {
+          "name": "Update Wake-up Call",
+          "request": {
+            "method": "POST",
+            "url": "http://localhost:3000/api/hotel/wakeupcall/update",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            }
+          }
+        },
+        {
+          "name": "Delete Wake-up Call",
+          "request": {
+            "method": "POST",
+            "url": "http://localhost:3000/api/hotel/wakeupcall/delete",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"extension_id\":\"100\"}"
+            }
+          }
+        },
+        {
+          "name": "Checkout",
+          "request": {
+            "method": "POST",
+            "url": "http://localhost:3000/api/hotel/checkout",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"extension_ids\":[\"100\"]}"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Monitoring & Events",
+      "item": [
+        {
+          "name": "List Extension Status Monitor",
+          "request": {
+            "method": "GET",
+            "url": "http://localhost:3000/api/monitor/extension_status/list"
+          }
+        },
+        {
+          "name": "Update Extension Status Monitor",
+          "request": {
+            "method": "POST",
+            "url": "http://localhost:3000/api/monitor/extension_status/update",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            }
+          }
+        },
+        {
+          "name": "List Trunk Status Monitor",
+          "request": {
+            "method": "GET",
+            "url": "http://localhost:3000/api/monitor/trunk_status/list"
+          }
+        },
+        {
+          "name": "Update Trunk Status Monitor",
+          "request": {
+            "method": "POST",
+            "url": "http://localhost:3000/api/monitor/trunk_status/update",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            }
+          }
+        },
+        {
+          "name": "Query Webhook",
+          "request": {
+            "method": "POST",
+            "url": "http://localhost:3000/api/monitor/webhook/query",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            }
+          }
+        },
+        {
+          "name": "Update Webhook",
+          "request": {
+            "method": "POST",
+            "url": "http://localhost:3000/api/monitor/webhook/update",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            }
+          }
+        },
+        {
+          "name": "Test Webhook",
+          "request": {
+            "method": "POST",
+            "url": "http://localhost:3000/api/monitor/webhook/test",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"url\":\"https://example.com/webhook\"}"
+            }
+          }
+        },
+        {
+          "name": "Get Audio Stream",
+          "request": {
+            "method": "GET",
+            "url": "http://localhost:3000/api/monitor/audiostream/get"
+          }
+        },
+        {
+          "name": "Update Audio Stream",
+          "request": {
+            "method": "POST",
+            "url": "http://localhost:3000/api/monitor/audiostream/update",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            }
+          }
+        },
+        {
+          "name": "List PIN Lists",
+          "request": {
+            "method": "GET",
+            "url": "http://localhost:3000/api/monitor/pinlist/list"
+          }
+        },
+        {
+          "name": "Search PIN Lists",
+          "request": {
+            "method": "POST",
+            "url": "http://localhost:3000/api/monitor/pinlist/search",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            }
+          }
+        },
+        {
+          "name": "Get PIN List",
+          "request": {
+            "method": "POST",
+            "url": "http://localhost:3000/api/monitor/pinlist/get",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"id\":\"1\"}"
+            }
+          }
+        },
+        {
+          "name": "Query PIN Lists",
+          "request": {
+            "method": "POST",
+            "url": "http://localhost:3000/api/monitor/pinlist/query",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"ids\":[\"1\",\"2\"]}"
+            }
+          }
+        },
+        {
+          "name": "Create PIN List",
+          "request": {
+            "method": "POST",
+            "url": "http://localhost:3000/api/monitor/pinlist/create",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            }
+          }
+        },
+        {
+          "name": "Update PIN List",
+          "request": {
+            "method": "POST",
+            "url": "http://localhost:3000/api/monitor/pinlist/update",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"id\":\"1\"}"
+            }
+          }
+        },
+        {
+          "name": "Delete PIN List",
+          "request": {
+            "method": "POST",
+            "url": "http://localhost:3000/api/monitor/pinlist/delete",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"id\":\"1\"}"
+            }
+          }
+        },
+        {
+          "name": "List Block Numbers",
+          "request": {
+            "method": "GET",
+            "url": "http://localhost:3000/api/monitor/blocknumbers/list"
+          }
+        },
+        {
+          "name": "Search Block Numbers",
+          "request": {
+            "method": "POST",
+            "url": "http://localhost:3000/api/monitor/blocknumbers/search",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            }
+          }
+        },
+        {
+          "name": "Get Block Number",
+          "request": {
+            "method": "POST",
+            "url": "http://localhost:3000/api/monitor/blocknumbers/get",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"id\":\"1\"}"
+            }
+          }
+        },
+        {
+          "name": "Query Block Numbers",
+          "request": {
+            "method": "POST",
+            "url": "http://localhost:3000/api/monitor/blocknumbers/query",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"ids\":[\"1\",\"2\"]}"
+            }
+          }
+        },
+        {
+          "name": "Create Block Number",
+          "request": {
+            "method": "POST",
+            "url": "http://localhost:3000/api/monitor/blocknumbers/create",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            }
+          }
+        },
+        {
+          "name": "Update Block Number",
+          "request": {
+            "method": "POST",
+            "url": "http://localhost:3000/api/monitor/blocknumbers/update",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"id\":\"1\"}"
+            }
+          }
+        },
+        {
+          "name": "Delete Block Number",
+          "request": {
+            "method": "POST",
+            "url": "http://localhost:3000/api/monitor/blocknumbers/delete",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"id\":\"1\"}"
+            }
+          }
+        },
+        {
+          "name": "List Allow Numbers",
+          "request": {
+            "method": "GET",
+            "url": "http://localhost:3000/api/monitor/allownumbers/list"
+          }
+        },
+        {
+          "name": "Search Allow Numbers",
+          "request": {
+            "method": "POST",
+            "url": "http://localhost:3000/api/monitor/allownumbers/search",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            }
+          }
+        },
+        {
+          "name": "Get Allow Number",
+          "request": {
+            "method": "POST",
+            "url": "http://localhost:3000/api/monitor/allownumbers/get",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"id\":\"1\"}"
+            }
+          }
+        },
+        {
+          "name": "Query Allow Numbers",
+          "request": {
+            "method": "POST",
+            "url": "http://localhost:3000/api/monitor/allownumbers/query",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"ids\":[\"1\",\"2\"]}"
+            }
+          }
+        },
+        {
+          "name": "Create Allow Number",
+          "request": {
+            "method": "POST",
+            "url": "http://localhost:3000/api/monitor/allownumbers/create",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            }
+          }
+        },
+        {
+          "name": "Update Allow Number",
+          "request": {
+            "method": "POST",
+            "url": "http://localhost:3000/api/monitor/allownumbers/update",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"id\":\"1\"}"
+            }
+          }
+        },
+        {
+          "name": "Delete Allow Number",
+          "request": {
+            "method": "POST",
+            "url": "http://localhost:3000/api/monitor/allownumbers/delete",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"id\":\"1\"}"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Storage & Backup",
+      "item": [
+        {
+          "name": "List Storage",
+          "request": {
+            "method": "GET",
+            "url": "http://localhost:3000/api/storage/list"
+          }
+        },
+        {
+          "name": "List Backups",
+          "request": {
+            "method": "GET",
+            "url": "http://localhost:3000/api/storage/backup/list"
+          }
+        },
+        {
+          "name": "Search Backups",
+          "request": {
+            "method": "POST",
+            "url": "http://localhost:3000/api/storage/backup/search",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            }
+          }
+        },
+        {
+          "name": "Get Backup",
+          "request": {
+            "method": "POST",
+            "url": "http://localhost:3000/api/storage/backup/get",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"id\":\"1\"}"
+            }
+          }
+        },
+        {
+          "name": "Query Backups",
+          "request": {
+            "method": "POST",
+            "url": "http://localhost:3000/api/storage/backup/query",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"ids\":[\"1\",\"2\"]}"
+            }
+          }
+        },
+        {
+          "name": "Get Backup Status",
+          "request": {
+            "method": "POST",
+            "url": "http://localhost:3000/api/storage/backup/getstatus",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"id\":\"1\"}"
+            }
+          }
+        },
+        {
+          "name": "Download Backup",
+          "request": {
+            "method": "POST",
+            "url": "http://localhost:3000/api/storage/backup/download",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"id\":\"1\"}"
+            }
+          }
+        },
+        {
+          "name": "Create Backup",
+          "request": {
+            "method": "POST",
+            "url": "http://localhost:3000/api/storage/backup/create",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            }
+          }
+        },
+        {
+          "name": "Delete Backup",
+          "request": {
+            "method": "POST",
+            "url": "http://localhost:3000/api/storage/backup/delete",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"id\":\"1\"}"
+            }
+          }
+        },
+        {
+          "name": "List System Logs",
+          "request": {
+            "method": "GET",
+            "url": "http://localhost:3000/api/storage/systemlog/list"
+          }
+        },
+        {
+          "name": "Download System Log",
+          "request": {
+            "method": "POST",
+            "url": "http://localhost:3000/api/storage/systemlog/download",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"ids\":[\"1\"]}"
+            }
+          }
+        }
+      ]
+    }
+  ]
+}
