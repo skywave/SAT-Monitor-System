@@ -3,19 +3,20 @@
  * 
  * Manages PBX instances
  */
-import { Injectable, OnModuleInit } from '@nestjs/common'
+import { Injectable, OnModuleInit, Logger } from '@nestjs/common'
 import { PBXInstance, PBXConfig } from './instance/pbx.instance'
 import { pbxConfigs } from '../config/pbx.config'
 
 @Injectable()
 export class PBXManager implements OnModuleInit {
+  private readonly logger = new Logger(PBXManager.name)
   private instances: Map<string, PBXInstance> = new Map()
 
   /**
    * This runs automatically when NestJS starts the application
    */
   async onModuleInit() {
-    console.log('Initializing PBX connections...')
+    this.logger.log('Initializing PBX connections...')
     for (const config of pbxConfigs) {
       await this.initializePBX(config)
     }
@@ -25,9 +26,14 @@ export class PBXManager implements OnModuleInit {
    * Initialize a single PBX instance
    */
   async initializePBX(config: PBXConfig): Promise<void> {
-    const instance = new PBXInstance(config)
-    await instance.connect()
-    this.instances.set(config.id, instance)
+    try {
+      const instance = new PBXInstance(config)
+      await instance.connect()
+      this.instances.set(config.id, instance)
+      this.logger.log(`PBX [${config.id}] initialized successfully`)
+    } catch (error) {
+      this.logger.error(`Failed to initialize PBX [${config.id}]: ${error.message}`)
+    }
   }
 
   /**
@@ -35,6 +41,14 @@ export class PBXManager implements OnModuleInit {
    */
   getInstance(id: string): PBXInstance | undefined {
     return this.instances.get(id)
+  }
+
+  /**
+   * Get all active PBX instances as an array
+   * (Required for WebSocketManager to iterate and connect listeners)
+   */
+  getAllInstances(): PBXInstance[] {
+    return Array.from(this.instances.values())
   }
 
   /**

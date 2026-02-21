@@ -17,7 +17,7 @@ export class PBXInstance {
   public readonly id: string
   public readonly ip: string
   
-  private apiClient: PBX
+  public apiClient: PBX
   private isConnected: boolean = false
   
   // Token management
