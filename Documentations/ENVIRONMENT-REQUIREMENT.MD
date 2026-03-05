@@ -185,4 +185,4 @@ sudo systemctl start collector
 * Environment supports **multi-PBX scaling** and **secure internal monitoring**
 * System survives crashes, stores historical data, and maintains security boundaries
 
-This file have been edited by Miriki
+This file have been edited by Mirika
