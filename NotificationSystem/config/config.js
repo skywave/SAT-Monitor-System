@@ -19,16 +19,17 @@ module.exports = {
     cooldownMinutes:                parseInt(process.env.ALERT_COOLDOWN_MINUTES) || 30,
 
     // Only 'registered' is healthy — everything else triggers an alert
-    healthyStatuses: ['registered'],
+    healthyStatuses: ['registered', "registering"],
 
     // All non-healthy states that should fire an alert
     problemStatuses: [
-      'registration failed',
+      'unregistered',
       'disabled',
-      'failed',
-      'unreachable',
+      'idle and unmonitored',
+      'Trunk is unreachable',
       'authentication_failed',
       'unavailable',
+      'registration failed',
     ],
   },
 
@@ -36,11 +37,8 @@ module.exports = {
   email: {
     enabled:    false,
     recipients: (process.env.EMAIL_RECIPIENTS || 'intern.tech3@skywavetech.co.zm').split(',').map(function(e) { return e.trim(); }),
-
-    // recipients: (process.env.EMAIL_RECIPIENTS || 'intern.tech@skywavetech.co.zm').split(',').map(function(e) { return e.trim(); }),
-    
     // recipients: (process.env.EMAIL_RECIPIENTS || 'intern.tech2@skywavetech.co.zm').split(',').map(function(e) { return e.trim(); }),
-    
+    // recipients: (process.env.EMAIL_RECIPIENTS || 'intern.tech@skywavetech.co.zm').split(',').map(function(e) { return e.trim(); }),
   },
 
   // ── SMTP ───────────────────────────────────────────────────────────────────
@@ -49,9 +47,9 @@ module.exports = {
     host:    process.env.SMTP_HOST || 'smtp.gmail.com',
     port:    parseInt(process.env.SMTP_PORT) || 587,
     secure:  process.env.SMTP_SECURE === 'true',
-    user:    process.env.SMTP_USER || 'taomtonga7@gmail.com',
-    pass:    process.env.SMTP_PASS || 'hmmcnhyrtelsbesn',
-    from:    process.env.SMTP_FROM || 'SAT Monitor <taomtonga7@gmail.com>',
+    user:    process.env.SMTP_USER || '',
+    pass:    process.env.SMTP_PASS || '',
+    from:    process.env.SMTP_FROM || '',
   },
 
   // ── Webhook (disabled) ─────────────────────────────────────────────────────

@@ -1,52 +1,64 @@
-const engine   = require('../alertEngine/alertEngine');
-const Notifier = require('../notifier/notifier');
-const logger   = require('../config/logger');
+const engine = require('../alertEngine/alertEngine');
+const logger = require('../config/logger');
 
 function getState() {
-  const tracker = engine.getTrackerInstance();
-  const summary = tracker ? tracker.getSummary() : {};
-  return { success: true, trackedTrunks: Object.keys(summary).length, state: summary };
+  var tracker = engine.getTrackerInstance();
+  if (!tracker) {
+    return { success: true, trackedTrunks: 0, state: {} };
+  }
+  var summary = tracker.getSummary();
+  return {
+    success:       true,
+    trackedTrunks: Object.keys(summary).length,
+    state:         summary,
+  };
 }
 
 async function sendTest(params) {
-  params = params || {};
-  const trunkId   = params.trunkId   || 'TEST-1';
-  const trunkName = params.trunkName || 'Test-Trunk';
-  const trunkType = params.trunkType || 'SIP';
-  const status    = params.status    || 'unregistered';
-  const alertType = params.alertType || 'problem';
-
-  const alert = {
-    trunkId,
-    trunkName,
-    trunkType,
-    status,
-    alertType,
-    severity:            'CRITICAL',
-    firstFailedAt:       new Date(Date.now() - 5 * 60 * 1000),
-    consecutiveFailures: 3,
+  var Notifier = require('../notifier/notifier');
+  var notifier = new Notifier();
+  var alert = {
+    trunkId:             params.trunkId     || 'TEST-1',
+    trunkName:           params.trunkName   || 'Test-Trunk',
+    trunkType:           params.trunkType   || 'SIP',
+    status:              params.status      || 'unregistered',
+    alertType:           params.alertType   || 'problem',
+    severity:            params.severity    || 'CRITICAL',
+    consecutiveFailures: 1,
+    firstFailedAt:       new Date(),
     detectedAt:          new Date(),
   };
-
-  logger.info('Test alert triggered for trunk: ' + trunkName);
-  await new Notifier().dispatch(alert);
+  await notifier.dispatch(alert);
   return { success: true, message: 'Test alert dispatched', alert: alert };
 }
 
 function resetTrunk(trunkId) {
-  const tracker = engine.getTrackerInstance();
+  var tracker = engine.getTrackerInstance();
   if (!tracker) {
-    const e = new Error('Alert engine not running');
-    e.statusCode = 503;
-    throw e;
+    var e = new Error('Alert engine not running'); e.statusCode = 503; throw e;
   }
-  tracker.clear(trunkId);
-  logger.info('Alert state cleared for trunk: ' + trunkId);
-  return { success: true, message: 'Alert state cleared for trunk ' + trunkId };
+  tracker.clear(String(trunkId));
+  logger.info('Alert state reset for trunk: ' + trunkId);
+  return {
+    success: true,
+    message: 'Alert state cleared for trunk ' + trunkId + '. Next poll will re-evaluate.',
+  };
 }
 
-module.exports = {
-  getState:   getState,
-  sendTest:   sendTest,
-  resetTrunk: resetTrunk,
-};
+function resetAll() {
+  var tracker = engine.getTrackerInstance();
+  if (!tracker) {
+    var e = new Error('Alert engine not running'); e.statusCode = 503; throw e;
+  }
+  var summary = tracker.getSummary();
+  var ids = Object.keys(summary);
+  ids.forEach(function(id) { tracker.clear(id); });
+  logger.info('Alert state reset for all ' + ids.length + ' trunks');
+  return {
+    success: true,
+    message: 'Alert state cleared for all trunks (' + ids.length + '). Next poll will re-evaluate.',
+    trunks:  ids,
+  };
+}
+
+module.exports = { getState, sendTest, resetTrunk, resetAll };
