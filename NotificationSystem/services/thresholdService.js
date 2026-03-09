@@ -1,5 +1,4 @@
 /**
- * services/thresholdService.js
  * Evaluates per-trunk metrics against configured thresholds.
  * Severity: CRITICAL (2× over limit), WARNING (over limit)
  */

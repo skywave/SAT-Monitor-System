@@ -1,4 +1,6 @@
-﻿const logger = require('../config/logger');
+
+
+const logger = require('../config/logger');
 const config = require('../config/config');
 
 class alertStateTracker {

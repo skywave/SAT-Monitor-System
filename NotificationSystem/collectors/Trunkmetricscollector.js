@@ -1,5 +1,4 @@
 /**
- * collectors/trunkMetricsCollector.js
  * Pulls CDR data and computes per-trunk metrics
  */
 

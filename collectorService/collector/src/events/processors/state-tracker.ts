@@ -109,6 +109,54 @@ export class StateTracker {
   }
 
   /**
+   * Get all extension states for a PBX
+   */
+  getExtensionStates(pbxId: string): Map<string, any> {
+    const extensions = new Map<string, any>();
+    
+    for (const [key, state] of this.states.entries()) {
+      if (key.startsWith(`${pbxId}:extension:`)) {
+        const extId = key.split(':')[2];
+        extensions.set(extId, state);
+      }
+    }
+    
+    return extensions;
+  }
+
+  /**
+   * Get all call states for a PBX
+   */
+  getCallStates(pbxId: string): Map<string, any> {
+    const calls = new Map<string, any>();
+    
+    for (const [key, state] of this.states.entries()) {
+      if (key.startsWith(`${pbxId}:call:`)) {
+        const callId = key.split(':')[2];
+        calls.set(callId, state);
+      }
+    }
+    
+    return calls;
+  }
+
+  /**
+   * Get all agent states for a PBX
+   */
+  getAgentStates(pbxId: string): Map<string, any> {
+    const agents = new Map<string, any>();
+    
+    for (const [key, state] of this.states.entries()) {
+      if (key.startsWith(`${pbxId}:agent:`)) {
+        const agentId = key.split(':')[2];
+        agents.set(agentId, state);
+      }
+    }
+    
+    return agents;
+  }
+
+  /**
    * Clear states (for testing or reset)
    */
   clear(): void {

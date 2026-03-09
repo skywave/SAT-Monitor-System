@@ -1,5 +1,5 @@
 // src/endpoints/call-control.controller.ts
-import { Controller, Get, Post, Body } from '@nestjs/common';
+import { Controller, Get, Post, Body, Query } from '@nestjs/common';
 import { PBXManager } from '../pbx/pbx.manager';
 
 @Controller('api/call')
@@ -12,9 +12,9 @@ export class CallControlController {
     return instance.request(endpoint, method, data);
   }
 
-  @Post('query')
-  async query(@Body() body?: any) {
-    return this.request('call/query', 'POST', body);
+  @Get('query')
+  async query(@Query() query?: any) {
+    return this.request('call/query', 'GET', query);
   }
 
   @Post('dial')

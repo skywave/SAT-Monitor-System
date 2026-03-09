@@ -1,5 +1,4 @@
 /**
- *
  * Checks IP reachability for each trunk's SIP provider host.
  * Uses TCP connect (no root needed) on port 5060.
  */
