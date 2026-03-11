@@ -2,6 +2,8 @@
 
 import { Injectable, Logger } from '@nestjs/common';
 import { NormalizedEvent } from './event-normalizer';
+import { EventWriter } from '../../persistence/event.writer';
+import { StateWriter } from '../../persistence/state.writer';
 
 /**
  * Logs events to PostgreSQL
@@ -12,8 +14,8 @@ export class EventLogger {
   private readonly logger = new Logger(EventLogger.name);
 
   constructor(
-    // TODO: Inject your database service here
-    // private readonly db: DatabaseService
+    private readonly eventWriter: EventWriter,
+    private readonly stateWriter: StateWriter,
   ) {}
 
   /**
@@ -21,27 +23,13 @@ export class EventLogger {
    */
   async log(event: NormalizedEvent): Promise<void> {
     try {
-      // TODO: Implement actual database write
-      // For now, just log to console
+      // Persist to DB using EventWriter
       this.logger.log(
         `📝 Logging event: ${event.eventType} - ` +
         `${event.resource.type}/${event.resource.name} ` +
         `(${event.pbxId})`
       );
-
-      // Example SQL (implement with your ORM):
-      // await this.db.events.insert({
-      //   pbx_id: event.pbxId,
-      //   pbx_sn: event.pbxSn,
-      //   event_type: event.eventType,
-      //   event_id: event.eventId,
-      //   resource_type: event.resource.type,
-      //   resource_id: event.resource.id,
-      //   resource_name: event.resource.name,
-      //   data: event.data,
-      //   raw: event.raw,
-      //   timestamp: event.timestamp,
-      // });
+      await this.eventWriter.write(event);
 
     } catch (error) {
       this.logger.error(`Failed to log event: ${error.message}`);
@@ -61,15 +49,7 @@ export class EventLogger {
         `${previousState?.status_text || 'unknown'} → ${event.data.status_text}`
       );
 
-      // TODO: Write to state_history table
-      // await this.db.stateHistory.insert({
-      //   pbx_id: event.pbxId,
-      //   resource_type: event.resource.type,
-      //   resource_id: event.resource.id,
-      //   previous_state: previousState,
-      //   current_state: event.data,
-      //   changed_at: event.timestamp,
-      // });
+      await this.stateWriter.writeStateChange(event, previousState);
 
     } catch (error) {
       this.logger.error(`Failed to log state change: ${error.message}`);

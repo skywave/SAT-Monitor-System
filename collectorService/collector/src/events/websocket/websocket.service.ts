@@ -52,8 +52,18 @@ export class YeastarWebSocketService {
     this.ws.on('open', () => {
       this.logger.log('✅ Connected');
       this.startHeartbeat();
-      // Subscribe to Trunk (30010) & Call (30011)
-      this.subscribe([30010, 30011]);
+      // Subscribe to Extension, Trunk, Call, Agent, and Transfer events
+      this.subscribe([
+        30007, // Extension Registration Status Changed
+        30008, // Extension Call State Changed
+        30010, // Trunk Registration State Changed
+        30011, // Call State Changed
+        30012, // Call End Details (CDR)
+        30013, // Call Transfer Report
+        30022, // Extension Information Updated
+        30023, // Trunk Information Updated
+        30029, // Agent Status Changed
+      ]);
     });
 
     this.ws.on('message', (data: WebSocket.RawData) => {

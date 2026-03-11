@@ -19,6 +19,12 @@ export class EventNormalizer {
       const data = JSON.parse(rawEvent.msg);
 
       switch (rawEvent.type) {
+        case 30007:
+          return this.normalizeExtensionRegistrationEvent(rawEvent, data);
+        
+        case 30008:
+          return this.normalizeExtensionCallEvent(rawEvent, data);
+        
         case 30010:
           return this.normalizeTrunkEvent(rawEvent, data);
         
@@ -27,6 +33,18 @@ export class EventNormalizer {
         
         case 30012:
           return this.normalizeCDREvent(rawEvent, data);
+        
+        case 30013:
+          return this.normalizeCallTransferEvent(rawEvent, data);
+        
+        case 30022:
+          return this.normalizeExtensionInfoUpdateEvent(rawEvent, data);
+        
+        case 30023:
+          return this.normalizeTrunkInfoUpdateEvent(rawEvent, data);
+        
+        case 30029:
+          return this.normalizeAgentStatusEvent(rawEvent, data);
         
         default:
           this.logger.warn(`Unhandled event type: ${rawEvent.type}`);
@@ -118,6 +136,168 @@ export class EventNormalizer {
   }
 
   /**
+   * Normalize extension registration event (30007)
+   */
+  private normalizeExtensionRegistrationEvent(
+    raw: YeastarEvent & { pbxId: string },
+    data: any
+  ): NormalizedEvent {
+    return {
+      eventType: 'extension_registration_changed',
+      eventId: raw.type,
+      pbxId: raw.pbxId,
+      pbxSn: raw.sn,
+      timestamp: new Date(),
+      resource: {
+        type: 'extension',
+        id: data.ext_id || data.extid || '',
+        name: data.ext_name || data.extname || '',
+      },
+      data: {
+        ext_id: data.ext_id || data.extid,
+        ext_name: data.ext_name || data.extname,
+        registration_status: data.registration_status,
+        status_text: this.getExtensionRegistrationText(data.registration_status),
+        ip: data.ip,
+        user_agent: data.user_agent,
+      },
+      raw: raw,
+    };
+  }
+
+  /**
+   * Normalize extension call state event (30008)
+   */
+  private normalizeExtensionCallEvent(
+    raw: YeastarEvent & { pbxId: string },
+    data: any
+  ): NormalizedEvent {
+    return {
+      eventType: 'extension_call_state_changed',
+      eventId: raw.type,
+      pbxId: raw.pbxId,
+      pbxSn: raw.sn,
+      timestamp: new Date(),
+      resource: {
+        type: 'extension',
+        id: data.ext_id || data.extid || '',
+        name: data.ext_name || data.extname || '',
+      },
+      data: {
+        ext_id: data.ext_id || data.extid,
+        ext_name: data.ext_name || data.extname,
+        call_status: data.call_status,
+        call_id: data.call_id,
+        members: data.members,
+      },
+      raw: raw,
+    };
+  }
+
+  /**
+   * Normalize call transfer event (30013)
+   */
+  private normalizeCallTransferEvent(
+    raw: YeastarEvent & { pbxId: string },
+    data: any
+  ): NormalizedEvent {
+    return {
+      eventType: 'call_transferred',
+      eventId: raw.type,
+      pbxId: raw.pbxId,
+      pbxSn: raw.sn,
+      timestamp: new Date(),
+      resource: {
+        type: 'call',
+        id: data.call_id || '',
+        name: data.call_id || '',
+      },
+      data: {
+        call_id: data.call_id,
+        from: data.from,
+        to: data.to,
+        transferrer: data.transferrer,
+      },
+      raw: raw,
+    };
+  }
+
+  /**
+   * Normalize extension info update event (30022)
+   */
+  private normalizeExtensionInfoUpdateEvent(
+    raw: YeastarEvent & { pbxId: string },
+    data: any
+  ): NormalizedEvent {
+    return {
+      eventType: 'extension_info_updated',
+      eventId: raw.type,
+      pbxId: raw.pbxId,
+      pbxSn: raw.sn,
+      timestamp: new Date(),
+      resource: {
+        type: 'extension',
+        id: data.ext_id || data.extid || '',
+        name: data.ext_name || data.extname || '',
+      },
+      data: data,
+      raw: raw,
+    };
+  }
+
+  /**
+   * Normalize trunk info update event (30023)
+   */
+  private normalizeTrunkInfoUpdateEvent(
+    raw: YeastarEvent & { pbxId: string },
+    data: any
+  ): NormalizedEvent {
+    return {
+      eventType: 'trunk_info_updated',
+      eventId: raw.type,
+      pbxId: raw.pbxId,
+      pbxSn: raw.sn,
+      timestamp: new Date(),
+      resource: {
+        type: 'trunk',
+        id: data.trunk_name || '',
+        name: data.trunk_name || '',
+      },
+      data: data,
+      raw: raw,
+    };
+  }
+
+  /**
+   * Normalize agent status event (30029)
+   */
+  private normalizeAgentStatusEvent(
+    raw: YeastarEvent & { pbxId: string },
+    data: any
+  ): NormalizedEvent {
+    return {
+      eventType: 'agent_status_changed',
+      eventId: raw.type,
+      pbxId: raw.pbxId,
+      pbxSn: raw.sn,
+      timestamp: new Date(),
+      resource: {
+        type: 'agent',
+        id: data.agentid || data.agentid || '',
+        name: data.agentname || data.agentname || '',
+      },
+      data: {
+        agent_id: data.agentid,
+        agent_name: data.agentname,
+        agent_status: data.agent_status,
+        status_text: this.getAgentStatusText(data.agent_status),
+        queue_id: data.queueid,
+      },
+      raw: raw,
+    };
+  }
+
+  /**
    * Get human-readable trunk status
    */
   private getTrunkStatusText(status: number): string {
@@ -134,13 +314,39 @@ export class EventNormalizer {
     };
     return statusMap[status] || 'unknown';
   }
+
+  /**
+   * Get human-readable extension registration status
+   */
+  private getExtensionRegistrationText(status: any): string {
+    const statusMap: Record<any, string> = {
+      0: 'unregistered',
+      1: 'registered',
+      2: 'busy',
+      3: 'offline',
+    };
+    return statusMap[status] || 'unknown';
+  }
+
+  /**
+   * Get human-readable agent status
+   */
+  private getAgentStatusText(status: any): string {
+    const statusMap: Record<any, string> = {
+      0: 'not_available',
+      1: 'available',
+      2: 'busy',
+      3: 'paused',
+    };
+    return statusMap[status] || 'unknown';
+  }
 }
 
 /**
  * Normalized event structure (internal format)
  */
 export interface NormalizedEvent {
-  eventType: 'trunk_status_changed' | 'call_state_changed' | 'call_ended' | string;
+  eventType: 'trunk_status_changed' | 'call_state_changed' | 'call_ended' | 'extension_registration_changed' | 'extension_call_state_changed' | 'call_transferred' | 'extension_info_updated' | 'trunk_info_updated' | 'agent_status_changed' | string;
   eventId: number;
   pbxId: string;
   pbxSn: string;
