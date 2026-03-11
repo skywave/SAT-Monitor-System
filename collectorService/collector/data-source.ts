@@ -1,16 +1,17 @@
-import { DataSource } from 'typeorm';
-import { join } from 'path';
+// data-source.ts
 
-// TypeORM CLI expects a DataSource instance exported from this file.
-export default new DataSource({
+import { DataSource } from 'typeorm';
+
+export const AppDataSource = new DataSource({
   type: 'postgres',
-  host: 'localhost',
+  host: 'aws-1-eu-west-1.pooler.supabase.com',
   port: 5432,
-  username: 'skenwise',
+  username: 'postgres.mlpfnfbgpraprzuysnge',
   password: 'Black99raiser%*',
-  database: 'sat_monitor',
-  entities: [], // Temporarily disabled to debug migration
-  migrations: [join(process.cwd(), 'src/persistence/migrations/*{.ts,.js}')],
+  database: 'postgres',
+  ssl: { rejectUnauthorized: false },
+  entities: [],  // ✅ Empty for now (just to test migration)
+  migrations: ['src/persistence/migrations/**/*.ts'],
   synchronize: false,
   logging: true,
 });

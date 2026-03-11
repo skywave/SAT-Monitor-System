@@ -9,8 +9,8 @@ export class DeviceBandwidthMetricsEntity {
   @Column()
   device_ip: string;
 
-  @Column()
-  interface_name: string;
+  @Column({name: 'interface_name'})
+  network_interface: string;
 
   @Column({ type: 'bigint', default: 0 })
   bytes_in: number;
