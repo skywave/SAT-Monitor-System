@@ -8,6 +8,11 @@ const logger  = require('./config/logger');
 
 const app = express();
 
+const HealthRoutes = require('./routes/health');
+const AlertRoutes  = require('./routes/alerts');
+const TrunkRoutes  = require('./routes/trunks');
+// const NotificationRoutes = require('./routes/notifications');
+
 // ── Middleware ────────────────────────────────────────────────────────────────
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -18,10 +23,11 @@ app.use((req, _res, next) => {
 });
 
 // ── Routes ────────────────────────────────────────────────────────────────────
-app.use('/api/health',        require('./routes/health'));
-app.use('/api/alerts',        require('./routes/alerts'));
-app.use('/api/trunks',        require('./routes/trunks'));
-// app.use('/api/notifications', require('./routes/notifications'));
+app.use('/health', HealthRoutes);
+app.use('/alerts', AlertRoutes);
+app.use('/trunks', TrunkRoutes);
+// app.use('/NotificationRoutes', NotificationRoutes);
+
 
 // ── 404 ───────────────────────────────────────────────────────────────────────
 app.use((req, res) => {

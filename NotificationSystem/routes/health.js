@@ -1,6 +1,4 @@
 /**
-
- * GET /api/health — service status + collector reachability
  */
 
 const express       = require('express');

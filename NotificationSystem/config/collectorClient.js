@@ -10,13 +10,16 @@ const client = axios.create({
 
 // Yeastar P-Series trunk status codes
 // Only status 1 = healthy. Everything else = problem.
-var STATUS_CODES = {              
-  1:  'registered',                                                                   
-  41: 'registration failed',           
-  42: 'unreachable', 
-  43: 'unavailable', 
-  44: 'disabled',
-  45: 'authentication failed',          
+var STATUS_CODES = {             // trunk turned off in config
+  1:  'registered',            // OK — the only healthy state
+  2:  'busy',          // not registered
+  3:  'idle and unmonitored',          // registration in progress
+  4:  'registering',                // trying to connect              // registration failed
+  41: 'registration failed',           // host not reachable
+  42: 'Trunk is Unreachable', // wrong username/password
+  43: 'unavailable',
+  44:  'disabled', 
+  45:  'authentication failed',              // provider unavailable
 };
 
 function decodeStatus(code) {
@@ -35,7 +38,7 @@ function unwrap(data) {
 
 async function getTrunkStatuses() {
   try {
-   
+    // *** UPDATE THIS PATH if your endpoint is different ***
     const res  = await client.get('/api/trunk/list');
     const list = unwrap(res.data);
 
@@ -102,15 +105,13 @@ async function searchCDR(timeFrom, timeTo, page, pageSize) {
   page     = page     || 1;
   pageSize = pageSize || 1000;
   try {
-    const res = await client.post('/api/cdr/search', {
-      time_from: timeFrom,
-      time_to:   timeTo,
-      page:      page,
-      page_size: pageSize,
-    });
-    if (Array.isArray(res.data))        return res.data;
-    if (Array.isArray(res.data.data))   return res.data.data;
-    if (Array.isArray(res.data.cdr))    return res.data.cdr;
+    var params = { page: page, page_size: pageSize };
+    if (timeFrom) params.time_from = timeFrom;
+    if (timeTo)   params.time_to   = timeTo;
+    const res = await client.get('/api/cdr/list', { params: params });
+    if (Array.isArray(res.data))          return res.data;
+    if (Array.isArray(res.data.data))     return res.data.data;
+    if (Array.isArray(res.data.cdr))      return res.data.cdr;
     return [];
   } catch (err) {
     logger.error('searchCDR failed: ' + err.message);
