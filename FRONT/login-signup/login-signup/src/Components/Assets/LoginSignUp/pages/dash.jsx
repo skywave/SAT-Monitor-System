@@ -104,6 +104,11 @@ const Dashboard = () => {
     navigate('/login');
   };
 
+  // Navigate to network monitoring page
+  const handleNetworkMonitoring = () => {
+    navigate('/network');
+  };
+
   const getStatusIcon = (status) => {
     switch(status) {
       case 'up':
@@ -153,6 +158,9 @@ const Dashboard = () => {
               <span className="status-dot"></span>
               <span>Live</span>
             </div>
+            <button className="user-button network-button" onClick={handleNetworkMonitoring}>
+              Network Monitor
+            </button>
             <button className="user-button" onClick={handleLogout}>
               Logout
             </button>
