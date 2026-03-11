@@ -1,50 +1,39 @@
 import './App.css';
-import { BrowserRouter as Router, Switch, Route, Redirect } from 'react-router-dom';
+// 1. Updated imports: Switch is now Routes, Redirect is now Navigate
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import SignUp from './Components/Assets/LoginSignUp/LoginSignUp';
 import Login from './Components/Assets/LoginSignUp/Login';
-import Dashboard from './Components/Assets/Dashboard/Dashboard';
-import TrunkDetails from './Components/Assets/TrunkDetails/TrunkDetails';
-import NetworkMonitoring from './Components/Assets/NetworkMonitoring/NetworkMonitoring';
+import Dashboard from './Components/Assets/LoginSignUp/pages/dash';
+import NetworkMonitoring from './Components/Assets/LoginSignUp/pages/networkmonitoring';
+
 
 function App() {
   return (
     <Router>
-      <Switch>
-        {/* Default route - redirect to login */}
-        <Route exact path="/">
-          <Redirect to="/login" />
-        </Route>
+      {/* 3. Switch is replaced with Routes */}
+      <Routes>
         
-        {/* Login page */}
-        <Route path="/login">
-          <Login />
-        </Route>
+        {/* Default route - redirect to login using Navigate */}
+        <Route path="/" element={<Navigate to="/login" replace />} />
+        
+        {/* Login page: Route now uses 'element' prop */}
+        <Route path="/login" element={<Login />} />
         
         {/* Signup page */}
-        <Route path="/signup">
-          <SignUp />
-        </Route>
+        <Route path="/signup" element={<SignUp />} />
         
         {/* Dashboard page */}
-        <Route path="/dashboard">
-          <Dashboard />
-        </Route>
+        <Route path="/dashboard" element={<Dashboard />} />
         
         {/* Trunk Details page */}
-        <Route path="/trunk/:trunkId">
-          <TrunkDetails />
-        </Route>
         
         {/* Network Monitoring page */}
-        <Route path="/network">
-          <NetworkMonitoring />
-        </Route>
+        <Route path="/network" element={<NetworkMonitoring />} />
         
-        {/* Catch all - redirect to login */}
-        <Route path="*">
-          <Redirect to="/login" />
-        </Route>
-      </Switch>
+        {/* Catch all - redirect any unknown path to login */}
+        <Route path="*" element={<Navigate to="/login" replace />} />
+        
+      </Routes>
     </Router>
   );
 }

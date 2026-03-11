@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { useHistory } from 'react-router-dom';
-import './NetworkMonitoring.css';
+// 1. Updated import: useHistory is replaced by useNavigate
+import { useNavigate } from 'react-router-dom';
+import './networkmonitoring.css';
 
 const NetworkMonitoring = () => {
-  const history = useHistory();
+  // 2. Initialize useNavigate
+  const navigate = useNavigate();
   
   // Trunk status between components
   const [trunkStatus, setTrunkStatus] = useState({
@@ -68,14 +70,12 @@ const NetworkMonitoring = () => {
 
   // Call statistics
   const [callStats, setCallStats] = useState({
-    // Per-trunk stats
     trunks: {
       'MTN SIP': { active: 12, failed: 3, unanswered: 7, rejected: 2 },
       'Airtel': { active: 0, failed: 15, unanswered: 8, rejected: 5 },
       'Zamtel Primary': { active: 8, failed: 1, unanswered: 3, rejected: 0 },
       'Orange SIP': { active: 5, failed: 2, unanswered: 4, rejected: 1 }
     },
-    // Aggregated stats
     customerFacing: { active: 25, failed: 6, unanswered: 14, rejected: 3 },
     mnoFacing: { active: 25, failed: 21, unanswered: 22, rejected: 8 },
     gatewayFacing: { active: 25, failed: 0, unanswered: 0, rejected: 0 }
@@ -84,7 +84,6 @@ const NetworkMonitoring = () => {
   // Simulate real-time updates
   useEffect(() => {
     const interval = setInterval(() => {
-      // Update latencies
       setSatMonitorLatency(prev => ({
         gateway: Math.floor(Math.random() * 10) + 8,
         nas: Math.floor(Math.random() * 10) + 10,
@@ -100,7 +99,6 @@ const NetworkMonitoring = () => {
         google: Math.floor(Math.random() * 5) + 4
       }));
 
-      // Update active calls
       setCallStats(prev => ({
         ...prev,
         customerFacing: {
@@ -117,8 +115,9 @@ const NetworkMonitoring = () => {
     return () => clearInterval(interval);
   }, []);
 
+  // 3. Updated navigation logic: history.push becomes navigate()
   const handleBackToDashboard = () => {
-    history.push('/dashboard');
+    navigate('/dashboard');
   };
 
   const getStatusColor = (status) => {
@@ -221,7 +220,6 @@ const NetworkMonitoring = () => {
         </div>
 
         <div className="reachability-container">
-          {/* From SAT Monitor */}
           <div className="reachability-section">
             <h3 className="subsection-title">From SAT Monitor</h3>
             <div className="reachability-grid">
@@ -267,7 +265,6 @@ const NetworkMonitoring = () => {
             </div>
           </div>
 
-          {/* From SBC */}
           <div className="reachability-section">
             <h3 className="subsection-title">From SBC</h3>
             <div className="reachability-grid">
@@ -331,7 +328,6 @@ const NetworkMonitoring = () => {
               </tr>
             </thead>
             <tbody>
-              {/* SAT Monitor Latencies */}
               <tr>
                 <td className="source-cell">SAT Monitor</td>
                 <td>Gateway</td>
@@ -357,7 +353,6 @@ const NetworkMonitoring = () => {
                 <td><span className="quality-badge excellent">{getLatencyQuality(satMonitorLatency.google)}</span></td>
               </tr>
               
-              {/* SBC Latencies */}
               <tr className="separator-row">
                 <td className="source-cell">SBC</td>
                 <td>Gateway</td>
@@ -430,13 +425,12 @@ const NetworkMonitoring = () => {
           </div>
         </div>
 
-        {/* Section 5-8: Call Statistics */}
+        {/* Call Statistics */}
         <div className="section-title">
           <h2>Call Statistics</h2>
           <span className="section-subtitle">Since 00:00 Today</span>
         </div>
 
-        {/* Aggregated Stats */}
         <div className="call-aggregate-grid">
           <div className="aggregate-card customer">
             <h4>Customer Facing Side</h4>
