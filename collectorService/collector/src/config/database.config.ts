@@ -1,16 +1,23 @@
 // src/config/database.config.ts
-
 import { TypeOrmModuleOptions } from '@nestjs/typeorm';
+import * as dotenv from 'dotenv';
+dotenv.config();
 
 export const databaseConfig: TypeOrmModuleOptions = {
   type: 'postgres',
-  host: 'aws-1-eu-west-1.pooler.supabase.com',  // ✅ Pooler host
-  port: 5432,
-  username: 'postgres.mlpfnfbgpraprzuysnge',     
-  password: 'Black99raiser%*',                    
-  database: 'postgres',
-  ssl: { rejectUnauthorized: false },             
+  host: process.env.DB_HOST,
+  port: parseInt(process.env.DB_PORT || '5432', 10) || 5432,
+  username: process.env.DB_USER,
+  password: String(process.env.DB_PASS || ''),
+  database: process.env.DB_NAME,
+  ssl: { 
+    rejectUnauthorized: false // Required for Supabase connections
+  },
   entities: [__dirname + '/../**/*.entity{.ts,.js}'],
-  synchronize: false,  // ✅ Don't auto-sync in cloud
+  synchronize: false, // Keep this false now that migrations are live
   logging: true,
 };
+
+if (!process.env.DB_PASS) {
+  throw new Error("CRITICAL: .env file not found or DB_PASS is missing!");
+}

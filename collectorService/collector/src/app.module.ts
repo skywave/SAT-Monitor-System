@@ -10,6 +10,8 @@ import { HealthModule } from './health/health.module';
 import { EndpointsModule } from './endpoints/endpoints.module';
 import { EventsModule } from './events/events.module';
 import { NetworkModule } from './network/network.module';
+import { TypeOrmModule } from '@nestjs/typeorm';
+import { databaseConfig } from './config/database.config';
 
 @Module({
   imports: [
@@ -22,6 +24,7 @@ import { NetworkModule } from './network/network.module';
     EndpointsModule,
     EventsModule,
     NetworkModule,
+    TypeOrmModule.forRoot(databaseConfig),
   ],
   controllers: [ApiController],
   providers: [AppService],

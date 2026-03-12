@@ -71,7 +71,6 @@ export class PBXInstance {
       await this.refreshToken()
     }, refreshInMs)
     
-    console.log(`[PBX ${this.id}] Token refresh scheduled in ${refreshInMs / 1000}s`)
   }
 
   /**

@@ -81,8 +81,6 @@ export class PBX {
   async refresh(): Promise<void> {
     if (!this.refreshToken) throw new Error('No refresh token. Authenticate first.')
 
-    console.log('[PBX] Attempting token refresh for PBX at', this.ip)
-
     const response = await this.axiosInstance.post<TokenResponse>('refresh_token', {
       refresh_token: this.refreshToken
     })
