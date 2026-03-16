@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { useHistory } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import './NetworkMonitoring.css';
 
 const NetworkMonitoring = () => {
-  const history = useHistory();
+  const navigate = useNavigate();
   
   // Individual trunk status
   const [trunks, setTrunks] = useState([
@@ -138,7 +138,7 @@ const NetworkMonitoring = () => {
   }, []);
 
   const handleBackToDashboard = () => {
-    history.push('/dashboard');
+    navigate('/dashboard');
   };
 
   const getStatusColor = (status) => {
