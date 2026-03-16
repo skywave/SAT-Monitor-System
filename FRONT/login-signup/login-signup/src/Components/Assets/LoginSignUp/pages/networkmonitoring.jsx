@@ -1,19 +1,37 @@
 import React, { useState, useEffect } from 'react';
-// 1. Updated import: useHistory is replaced by useNavigate
-import { useNavigate } from 'react-router-dom';
-import './networkmonitoring.css';
+import { useHistory } from 'react-router-dom';
+import './NetworkMonitoring.css';
 
 const NetworkMonitoring = () => {
-  // 2. Initialize useNavigate
-  const navigate = useNavigate();
+  const history = useHistory();
   
-  // Trunk status between components
-  const [trunkStatus, setTrunkStatus] = useState({
-    sbcToGateway: 'up',
-    sbcToNAS: 'up',
-    sbcToMNO: 'down',
-    sbcToCustomer: 'up'
-  });
+  // Individual trunk status
+  const [trunks, setTrunks] = useState([
+    {
+      id: 1,
+      name: 'Gateway',
+      ipAddress: '192.168.1.1',
+      status: 'up'
+    },
+    {
+      id: 2,
+      name: 'NAS',
+      ipAddress: '192.168.1.50',
+      status: 'up'
+    },
+    {
+      id: 3,
+      name: 'MNO',
+      ipAddress: '10.20.30.40',
+      status: 'down'
+    },
+    {
+      id: 4,
+      name: 'Customer',
+      ipAddress: '172.16.10.100',
+      status: 'up'
+    }
+  ]);
 
   // IP Reachability from SAT Monitor
   const [satMonitorReachability, setSatMonitorReachability] = useState({
@@ -70,12 +88,14 @@ const NetworkMonitoring = () => {
 
   // Call statistics
   const [callStats, setCallStats] = useState({
+    // Per-trunk stats
     trunks: {
       'MTN SIP': { active: 12, failed: 3, unanswered: 7, rejected: 2 },
       'Airtel': { active: 0, failed: 15, unanswered: 8, rejected: 5 },
       'Zamtel Primary': { active: 8, failed: 1, unanswered: 3, rejected: 0 },
       'Orange SIP': { active: 5, failed: 2, unanswered: 4, rejected: 1 }
     },
+    // Aggregated stats
     customerFacing: { active: 25, failed: 6, unanswered: 14, rejected: 3 },
     mnoFacing: { active: 25, failed: 21, unanswered: 22, rejected: 8 },
     gatewayFacing: { active: 25, failed: 0, unanswered: 0, rejected: 0 }
@@ -84,6 +104,7 @@ const NetworkMonitoring = () => {
   // Simulate real-time updates
   useEffect(() => {
     const interval = setInterval(() => {
+      // Update latencies
       setSatMonitorLatency(prev => ({
         gateway: Math.floor(Math.random() * 10) + 8,
         nas: Math.floor(Math.random() * 10) + 10,
@@ -99,6 +120,7 @@ const NetworkMonitoring = () => {
         google: Math.floor(Math.random() * 5) + 4
       }));
 
+      // Update active calls
       setCallStats(prev => ({
         ...prev,
         customerFacing: {
@@ -115,9 +137,8 @@ const NetworkMonitoring = () => {
     return () => clearInterval(interval);
   }, []);
 
-  // 3. Updated navigation logic: history.push becomes navigate()
   const handleBackToDashboard = () => {
-    navigate('/dashboard');
+    history.push('/dashboard');
   };
 
   const getStatusColor = (status) => {
@@ -160,57 +181,20 @@ const NetworkMonitoring = () => {
         {/* Section 1: Trunk Status */}
         <div className="section-title">
           <h2>Trunk Status</h2>
-          <span className="section-subtitle">SBC Connection Status</span>
+          <span className="section-subtitle">Monitored Trunks</span>
         </div>
 
         <div className="trunk-status-grid">
-          <div className={`trunk-link-card ${getStatusColor(trunkStatus.sbcToGateway)}`}>
-            <div className="link-endpoints">
-              <span className="endpoint">SBC</span>
-              <span className="link-arrow">→</span>
-              <span className="endpoint">Gateway</span>
+          {trunks.map(trunk => (
+            <div key={trunk.id} className={`trunk-card ${getStatusColor(trunk.status)}`}>
+              <div className="trunk-name">{trunk.name}</div>
+              <div className="trunk-ip">{trunk.ipAddress}</div>
+              <div className={`trunk-status-badge ${getStatusColor(trunk.status)}`}>
+                <span className="status-dot">●</span>
+                {trunk.status === 'up' ? 'UP' : 'DOWN'}
+              </div>
             </div>
-            <div className={`link-status ${getStatusColor(trunkStatus.sbcToGateway)}`}>
-              <span className="status-dot">●</span>
-              {trunkStatus.sbcToGateway === 'up' ? 'UP' : 'DOWN'}
-            </div>
-          </div>
-
-          <div className={`trunk-link-card ${getStatusColor(trunkStatus.sbcToNAS)}`}>
-            <div className="link-endpoints">
-              <span className="endpoint">SBC</span>
-              <span className="link-arrow">→</span>
-              <span className="endpoint">NAS</span>
-            </div>
-            <div className={`link-status ${getStatusColor(trunkStatus.sbcToNAS)}`}>
-              <span className="status-dot">●</span>
-              {trunkStatus.sbcToNAS === 'up' ? 'UP' : 'DOWN'}
-            </div>
-          </div>
-
-          <div className={`trunk-link-card ${getStatusColor(trunkStatus.sbcToMNO)}`}>
-            <div className="link-endpoints">
-              <span className="endpoint">SBC</span>
-              <span className="link-arrow">→</span>
-              <span className="endpoint">MNO</span>
-            </div>
-            <div className={`link-status ${getStatusColor(trunkStatus.sbcToMNO)}`}>
-              <span className="status-dot">●</span>
-              {trunkStatus.sbcToMNO === 'up' ? 'UP' : 'DOWN'}
-            </div>
-          </div>
-
-          <div className={`trunk-link-card ${getStatusColor(trunkStatus.sbcToCustomer)}`}>
-            <div className="link-endpoints">
-              <span className="endpoint">SBC</span>
-              <span className="link-arrow">→</span>
-              <span className="endpoint">Customer</span>
-            </div>
-            <div className={`link-status ${getStatusColor(trunkStatus.sbcToCustomer)}`}>
-              <span className="status-dot">●</span>
-              {trunkStatus.sbcToCustomer === 'up' ? 'UP' : 'DOWN'}
-            </div>
-          </div>
+          ))}
         </div>
 
         {/* Section 2: IP Reachability */}
@@ -220,6 +204,7 @@ const NetworkMonitoring = () => {
         </div>
 
         <div className="reachability-container">
+          {/* From SAT Monitor */}
           <div className="reachability-section">
             <h3 className="subsection-title">From SAT Monitor</h3>
             <div className="reachability-grid">
@@ -265,6 +250,7 @@ const NetworkMonitoring = () => {
             </div>
           </div>
 
+          {/* From SBC */}
           <div className="reachability-section">
             <h3 className="subsection-title">From SBC</h3>
             <div className="reachability-grid">
@@ -328,6 +314,7 @@ const NetworkMonitoring = () => {
               </tr>
             </thead>
             <tbody>
+              {/* SAT Monitor Latencies */}
               <tr>
                 <td className="source-cell">SAT Monitor</td>
                 <td>Gateway</td>
@@ -353,6 +340,7 @@ const NetworkMonitoring = () => {
                 <td><span className="quality-badge excellent">{getLatencyQuality(satMonitorLatency.google)}</span></td>
               </tr>
               
+              {/* SBC Latencies */}
               <tr className="separator-row">
                 <td className="source-cell">SBC</td>
                 <td>Gateway</td>
@@ -425,12 +413,13 @@ const NetworkMonitoring = () => {
           </div>
         </div>
 
-        {/* Call Statistics */}
+        {/* Section 5-8: Call Statistics */}
         <div className="section-title">
           <h2>Call Statistics</h2>
           <span className="section-subtitle">Since 00:00 Today</span>
         </div>
 
+        {/* Aggregated Stats */}
         <div className="call-aggregate-grid">
           <div className="aggregate-card customer">
             <h4>Customer Facing Side</h4>
