@@ -470,4 +470,80 @@ body {
   .trunk-time {
     display: none;
   }
+
+  
+
+/* Notification Button */
+.notification-button {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  background: transparent;
+  border: 1px solid var(--border-color);
+  border-radius: 0.5rem;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.notification-button svg {
+  width: 20px;
+  height: 20px;
+}
+
+.notification-button:hover {
+  border-color: var(--amethyst-primary);
+  color: var(--amethyst-primary);
+  background: rgba(153, 102, 255, 0.05);
+}
+
+.notification-badge {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  background: var(--status-down);
+  color: white;
+  font-size: 0.7rem;
+  font-weight: 700;
+  border-radius: 9px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: notificationPulse 2s ease-in-out infinite;
+}
+
+@keyframes notificationPulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.1); }
+}
+
+/* Updated Header Right */
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+/* Bandwidth Column Styles */
+.trunk-bandwidth {
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Update warning status row tinting */
+.trunk-row.status-warning {
+  background: rgba(255, 170, 0, 0.05);
+  border-left: 3px solid var(--status-warning);
+}
+
+.trunk-row.status-warning:hover {
+  background: rgba(255, 170, 0, 0.08);
+}
+
 }
