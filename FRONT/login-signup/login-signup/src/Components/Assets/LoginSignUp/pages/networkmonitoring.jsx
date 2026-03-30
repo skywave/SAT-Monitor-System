@@ -1,12 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import './networkmonitoring.css';
-import { createClient } from '@supabase/supabase-js';
-
-// Supabase configuration
-const supabaseUrl = 'https://mlpfnfbgpraprzuysnge.supabase.co';
-const supabaseKey = 'sb_publishable_F6Hzt-MAkdwuxVMYz4DKtA__FSnDOVM';
-const supabase = createClient(supabaseUrl, supabaseKey);
+import { useHistory } from 'react-router-dom';
+import './NetworkMonitoring.css';
 
 const NetworkMonitoring = () => {
   const navigate = useNavigate();
