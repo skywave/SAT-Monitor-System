@@ -1,17 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-<<<<<<< Updated upstream
 import './dash.css';
 import { getTrunks, getNetworkStatus } from '../../../../services/monitoringService';
-=======
-import './Dashboard.css';
->>>>>>> Stashed changes
 
 const Dashboard = () => {
   const navigate = useNavigate();
   
-<<<<<<< Updated upstream
-  // Real data from Supabase
   const [trunks, setTrunks] = useState([]);
   const [networkStatus, setNetworkStatus] = useState({
     status: 'optimal',
@@ -19,8 +13,8 @@ const Dashboard = () => {
     packetLoss: 0
   });
   const [loading, setLoading] = useState(true);
+  const [unreadNotifications, setUnreadNotifications] = useState(0);
 
-  // Load data on mount and refresh every 5 seconds
   useEffect(() => {
     const loadData = async () => {
       setLoading(true);
@@ -34,144 +28,15 @@ const Dashboard = () => {
     };
     
     loadData();
-    
-    // Refresh every 5 seconds
-    const interval = setInterval(loadData, 5000);
+    const interval = setInterval(loadData, 30000);
     return () => clearInterval(interval);
   }, []);
-=======
-  const [trunks, setTrunks] = useState([
-    { 
-      id: 1, 
-      name: 'MTN SIP', 
-      pbx: 'PBX-01', 
-      status: 'up', 
-      latency: 23, 
-      bandwidth: 512,
-      lastUpdate: Date.now() 
-    },
-    { 
-      id: 2, 
-      name: 'Airtel', 
-      pbx: 'PBX-01', 
-      status: 'down', 
-      latency: null, 
-      bandwidth: 0,
-      lastUpdate: Date.now() 
-    },
-    { 
-      id: 3, 
-      name: 'Zamtel Primary', 
-      pbx: 'PBX-02', 
-      status: 'up', 
-      latency: 18, 
-      bandwidth: 1024,
-      lastUpdate: Date.now() 
-    },
-    { 
-      id: 4, 
-      name: 'Zamtel Backup', 
-      pbx: 'PBX-02', 
-      status: 'warning', 
-      latency: 156, 
-      bandwidth: 128,
-      lastUpdate: Date.now() 
-    },
-    { 
-      id: 5, 
-      name: 'Orange SIP', 
-      pbx: 'PBX-03', 
-      status: 'up', 
-      latency: 31, 
-      bandwidth: 256,
-      lastUpdate: Date.now() 
-    },
-    { 
-      id: 6, 
-      name: 'MTN Backup', 
-      pbx: 'PBX-01', 
-      status: 'up', 
-      latency: 27, 
-      bandwidth: 512,
-      lastUpdate: Date.now() 
-    },
-    { 
-      id: 7, 
-      name: 'Liquid SIP', 
-      pbx: 'PBX-04', 
-      status: 'up', 
-      latency: 42, 
-      bandwidth: 768,
-      lastUpdate: Date.now() 
-    },
-    { 
-      id: 8, 
-      name: 'TopStar', 
-      pbx: 'PBX-03', 
-      status: 'up', 
-      latency: 35, 
-      bandwidth: 256,
-      lastUpdate: Date.now() 
-    },
-    { 
-      id: 9, 
-      name: 'Coppernet', 
-      pbx: 'PBX-04', 
-      status: 'warning', 
-      latency: 4, 
-      bandwidth: 64,
-      lastUpdate: Date.now() 
-    }
-  ]);
 
-  const [unreadNotifications, setUnreadNotifications] = useState(3);
->>>>>>> Stashed changes
-
-  // Calculate summary stats
   const totalTrunks = trunks.length;
   const trunksUp = trunks.filter(t => t.status === 'up').length;
   const trunksDown = trunks.filter(t => t.status === 'down').length;
-  const avgLatency = Math.round(
-    trunks.filter(t => t.latency).reduce((sum, t) => sum + t.latency, 0) / 
-    trunks.filter(t => t.latency).length
-  );
-
-  // Simulate real-time updates
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setTrunks(prevTrunks => {
-        const updatedTrunks = [...prevTrunks];
-        const randomIndex = Math.floor(Math.random() * updatedTrunks.length);
-        const trunk = updatedTrunks[randomIndex];
-        
-        if (trunk.status !== 'down') {
-          const newLatency = Math.floor(Math.random() * 150) + 5;
-          const newBandwidth = [64, 128, 256, 512, 768, 1024][Math.floor(Math.random() * 6)];
-          
-          updatedTrunks[randomIndex] = {
-            ...trunk,
-            latency: newLatency,
-            bandwidth: newBandwidth,
-            status: getStatusFromMetrics(newLatency, newBandwidth),
-            lastUpdate: Date.now()
-          };
-        }
-        
-        return updatedTrunks;
-      });
-    }, 5000);
-
-    return () => clearInterval(interval);
-  }, []);
-
-  const getStatusFromMetrics = (latency, bandwidth) => {
-    // Orange/Warning if latency is too high (>100ms) or too low (<5ms)
-    // Or if bandwidth is too low (<128 Kbps) or too high (>900 Kbps)
-    if (latency > 100 || latency < 5 || bandwidth < 128 || bandwidth > 900) {
-      return 'warning';
-    }
-    return 'up';
-  };
+  const trunksWarning = trunks.filter(t => t.status === 'warning').length;
+  const avgLatency = networkStatus.avgLatency;
 
   const getStatusColor = (status) => {
     if (status === 'up') return 'status-up';
@@ -181,13 +46,7 @@ const Dashboard = () => {
 
   const getStatusText = (trunk) => {
     if (trunk.status === 'down') return 'DOWN';
-    if (trunk.status === 'warning') {
-      // Check what's causing the warning
-      if (trunk.latency > 100) return 'HIGH LATENCY';
-      if (trunk.latency < 5) return 'LOW LATENCY';
-      if (trunk.bandwidth < 128) return 'LOW BANDWIDTH';
-      if (trunk.bandwidth > 900) return 'HIGH BANDWIDTH';
-    }
+    if (trunk.status === 'warning') return 'HIGH LATENCY';
     return 'UP';
   };
 
@@ -217,6 +76,20 @@ const Dashboard = () => {
     navigate('/notifications');
   };
 
+  const handleNetworkClick = () => {
+    navigate('/network');
+  };
+
+  if (loading && trunks.length === 0) {
+    return (
+      <div className="dashboard">
+        <div style={{textAlign: 'center', padding: '4rem'}}>
+          <h2>Loading monitoring data...</h2>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="dashboard">
       {/* Header */}
@@ -236,6 +109,17 @@ const Dashboard = () => {
             <span className="live-dot"></span>
             <span>Live</span>
           </div>
+          
+          {/* Network Monitoring Button - NEW */}
+          <button className="network-button" onClick={handleNetworkClick}>
+            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M5 12.55a11 11 0 0 1 14.08 0" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+              <path d="M1.42 9a16 16 0 0 1 21.16 0" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+              <path d="M8.53 16.11a6 6 0 0 1 6.95 0" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+              <line x1="12" y1="20" x2="12.01" y2="20" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+            </svg>
+            Network
+          </button>
           
           <button className="notification-button" onClick={handleNotificationClick}>
             <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -301,69 +185,13 @@ const Dashboard = () => {
             <div className="card-content">
               <div className="card-label">Network Status</div>
               <div className="card-value">{avgLatency}ms</div>
+              <div className="card-sub">{networkStatus.status}</div>
             </div>
           </div>
         </div>
 
         {/* Trunk Status Table */}
         <div className="trunk-table-container">
-<<<<<<< Updated upstream
-          <div className="table-header">
-            <h2>Active Trunks</h2>
-            <div className="table-actions">
-              <button className="action-button">
-                <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M21 21L15 15M17 10C17 13.866 13.866 17 10 17C6.13401 17 3 13.866 3 10C3 6.13401 6.13401 3 10 3C13.866 3 17 6.13401 17 10Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
-                </svg>
-              </button>
-              <button className="action-button">
-                <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M4 6H20M4 12H20M4 18H20" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
-                </svg>
-              </button>
-            </div>
-          </div>
-
-          <div className="table-wrapper">
-            {loading ? (
-              <div style={{textAlign: 'center', padding: '2rem'}}>Loading...</div>
-            ) : (
-              <table className="trunk-table">
-                <thead>
-                  <tr>
-                    <th>Trunk Name</th>
-                    <th>PBX</th>
-                    <th>Status</th>
-                    <th>Latency</th>
-                    <th>Last Change</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {sortedTrunks.map(trunk => (
-                    <tr 
-                      key={trunk.id} 
-                      className={`trunk-row ${trunk.status}`}
-                      onClick={() => handleTrunkClick(trunk)}
-                    >
-                      <td className="trunk-name">{trunk.name}</td>
-                      <td className="trunk-pbx">{trunk.pbx}</td>
-                      <td className="trunk-status">
-                        <span className={`status-badge ${trunk.status}`}>
-                          <span className="status-icon">{getStatusIcon(trunk.status)}</span>
-                          {getStatusText(trunk.status)}
-                        </span>
-                      </td>
-                      <td className="trunk-latency">
-                        {trunk.latency ? `${trunk.latency}ms` : '—'}
-                      </td>
-                      <td className="trunk-time">{trunk.lastChanged}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            )}
-          </div>
-=======
           <h2 className="section-title">Trunk Status</h2>
           <table className="trunk-table">
             <thead>
@@ -371,6 +199,7 @@ const Dashboard = () => {
                 <th>Trunk Name</th>
                 <th>PBX</th>
                 <th>Status</th>
+                <th>Last Changed</th>
                 <th>Latency</th>
                 <th>Bandwidth</th>
               </tr>
@@ -391,16 +220,18 @@ const Dashboard = () => {
                     </span>
                   </td>
                   <td className="trunk-latency">
-                    {trunk.latency ? `${trunk.latency}ms` : '—'}
+                    {trunk.lastChanged || '—'}
+                  </td>
+                  <td className="trunk-latency">
+                    {trunk.latency ? `${trunk.latency}ms` : 'N/A'}
                   </td>
                   <td className="trunk-bandwidth">
-                    {trunk.bandwidth ? `${trunk.bandwidth} Kbps` : '—'}
+                    N/A
                   </td>
                 </tr>
               ))}
             </tbody>
           </table>
->>>>>>> Stashed changes
         </div>
       </div>
     </div>

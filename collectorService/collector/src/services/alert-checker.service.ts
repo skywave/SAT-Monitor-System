@@ -87,7 +87,6 @@ export class AlertCheckerService {
             trunk_id: trunk.trunk_id,
             status: trunk.status,
             status_text: trunk.status_text,
-            peer_ip: trunk.destination_ip,
             active_calls: trunk.active_calls,
           },
           config,

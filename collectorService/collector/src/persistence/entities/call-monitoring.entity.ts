@@ -1,3 +1,4 @@
+// src/persistence/entities/call-monitoring.entity.ts
 import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, Index, Unique } from 'typeorm';
 
 @Entity('call_monitoring')
@@ -15,34 +16,23 @@ export class CallMonitoringEntity {
   trunk_id?: string;  // null = system-wide aggregation
 
   @Column({ type: 'timestamptz' })
-  period_start: Date;  // Start of period (rounded to minute/hour/day)
+  period_start: Date;  // Start of period (rounded to minute)
 
   @Column()
   period_type: string;  // 'minute', 'hour', 'day'
 
-  // Real-time metrics
+  // === PHASE 1: Core call metrics ===
   @Column({ default: 0 })
-  active_calls: number;
+  active_calls: number;  // Current active calls at this moment
 
   @Column({ default: 0 })
-  peak_concurrent_calls: number;
-
-  // Call counts by type
-  @Column({ default: 0 })
-  total_calls: number;
+  total_calls: number;  // Total calls in this period
 
   @Column({ default: 0 })
   inbound_calls: number;
 
   @Column({ default: 0 })
   outbound_calls: number;
-
-  @Column({ default: 0 })
-  internal_calls: number;
-
-  // Call counts by status
-  @Column({ default: 0 })
-  completed_calls: number;
 
   @Column({ default: 0 })
   answered_calls: number;
@@ -57,35 +47,37 @@ export class CallMonitoringEntity {
   no_answer_calls: number;
 
   @Column({ default: 0 })
-  busy_calls: number;
-
-  // Duration metrics
-  @Column({ default: 0 })
-  total_duration_seconds?: number;
+  total_duration_seconds: number;  // Sum of all call durations
 
   @Column({ type: 'float', nullable: true })
-  avg_duration_seconds?: number;
-
-  @Column({ nullable: true })
-  max_duration_seconds?: number;
-
-  @Column({ nullable: true })
-  min_duration_seconds?: number;
-
-  // Quality metrics (optional)
-  @Column({ type: 'float', nullable: true })
-  avg_call_setup_time_ms?: number;  // Time to establish call
-
-  @Column({ type: 'float', nullable: true })
-  call_success_rate_percent?: number;  // (completed / total) * 100
-
-  // MNO distribution
-  @Column({ type: 'jsonb', nullable: true })
-  mno_distribution: any;  // { "MTN": 50, "Airtel": 30 }
+  avg_duration_seconds?: number;  // Average call duration
 
   @Column({ type: 'timestamptz' })
   last_updated: Date;
 
+  // === PHASE 2 (Keep for later) ===
+  @Column({ default: 0 })
+  peak_concurrent_calls: number;  // TODO: Phase 2
+
+  @Column({ default: 0 })
+  busy_calls: number;  // TODO: Phase 2
+
+  @Column({ default: 0 })
+  internal_calls: number;  // TODO: Phase 2
+
+  @Column({ default: 0 })
+  completed_calls: number;  // TODO: Phase 2
+
+  @Column({ nullable: true })
+  max_duration_seconds?: number;  // TODO: Phase 2
+
+  @Column({ nullable: true })
+  min_duration_seconds?: number;  // TODO: Phase 2
+
+  @Column({ type: 'jsonb', nullable: true })
+  mno_distribution: any;  // TODO: Phase 2 (needs MNO data)
+
+  // === AUDIT ===
   @CreateDateColumn({ type: 'timestamptz' })
   created_at: Date;
 

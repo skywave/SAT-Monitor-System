@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import './Notifications.css';
+import './notification.css';
 
 const Notifications = () => {
   const navigate = useNavigate();

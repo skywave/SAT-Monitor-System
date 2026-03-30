@@ -1,3 +1,4 @@
+// src/supervisor/monitoring.service.ts
 import { Injectable, Logger, Optional, OnModuleDestroy } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, DeepPartial } from 'typeorm';
@@ -36,6 +37,10 @@ export class MonitoringService implements OnModuleDestroy {
     this.startDataSync();
   }
 
+  /**
+   * Start data synchronization - Polls PBX every 30 seconds
+   * (Reduced from 5 seconds to reduce load)
+   */
   private startDataSync(): void {
     this.syncInterval = setInterval(async () => {
       try {
@@ -61,48 +66,12 @@ export class MonitoringService implements OnModuleDestroy {
       } catch (error) {
         this.logger.error(`Data sync error: ${error.message}`);
       }
-    }, 5000);
+    }, 30000); // Changed from 5000 to 30000 (30 seconds)
   }
 
   /**
-   * Get latest latency for an IP from network_monitoring table
-   */
-  private async getLatencyForIP(ip: string): Promise<number | undefined> {
-    try {
-      const result = await this.networkMonitoringRepo.findOne({
-        where: { ip_address: ip },
-        order: { timestamp: 'DESC' },
-      });
-      return result?.latency_ms || undefined;
-    } catch (error) {
-      return undefined;
-    }
-  }
-
-  /**
-   * Get latest bandwidth for a trunk from bandwidth_monitoring table
-   */
-  private async getBandwidthForTrunk(trunkId: string): Promise<{ in: number; out: number } | undefined> {
-    try {
-      const result = await this.bandwidthMonitoringRepo.findOne({
-        where: { trunk_id: trunkId },
-        order: { timestamp: 'DESC' },
-      });
-      
-      if (result) {
-        return {
-          in: result.bandwidth_in_mbps || 0,
-          out: result.bandwidth_out_mbps || 0,
-        };
-      }
-      return undefined;
-    } catch (error) {
-      return undefined;
-    }
-  }
-
-  /**
-   * Write trunk status to database
+   * Write trunk status to database - SIMPLIFIED for Phase 1
+   * Only writes fields that are actually available from PBX API
    */
   private async writeTrunkStatuses(trunks: any[]): Promise<void> {
     for (const trunk of trunks) {
@@ -112,100 +81,31 @@ export class MonitoringService implements OnModuleDestroy {
         const status = trunk.status || 1;
         const previousState = this.previousTrunkStates.get(trunkId);
 
-        // Extract IP from host_port
-        let destinationIp = 'unknown';
-        let destinationPort = '5060';
-
-        if (trunk.host_port) {
-          const parts = trunk.host_port.split(':');
-          destinationIp = parts[0];
-          destinationPort = parts[1] || '5060';
-        }
-
-        // Determine source/destination type
-        let sourceType = 'PBX';
-        let destinationType = 'Unknown';
-
-        if (trunk.type === 'peer') {
-          sourceType = 'PBX';
-          destinationType = 'SBC';
-        } else if (trunk.type === 'register') {
-          sourceType = 'PBX';
-          const nameLower = trunkName.toLowerCase();
-          if (nameLower.includes('mtn')) {
-            destinationType = 'MNO-MTN';
-          } else if (nameLower.includes('airtel')) {
-            destinationType = 'MNO-Airtel';
-          } else if (nameLower.includes('zamtel')) {
-            destinationType = 'MNO-Zamtel';
-          } else if (nameLower.includes('vapi')) {
-            destinationType = 'VAPI-Gateway';
-          } else if (nameLower.includes('pbx') || nameLower.includes('cloudpbx')) {
-            destinationType = 'PBX-Peer';
-          } else {
-            destinationType = 'SIP-Gateway';
-          }
-        } else if (trunk.type === 'webtrunk') {
-          sourceType = 'PBX';
-          destinationType = 'WebRTC-Gateway';
-        }
-
-        // Get latency and bandwidth from monitoring tables
-        const latency = await this.getLatencyForIP(destinationIp);
-        const bandwidth = await this.getBandwidthForTrunk(trunkId);
-
         // Status change detection
         const statusChanged = previousState?.status !== status;
         const statusChangedAt = statusChanged ? new Date() : (previousState?.status_changed_at || new Date());
 
-        // Calculate uptime/downtime
-        let uptimeSeconds = previousState?.uptime_seconds || 0;
-        let downtimeSeconds = previousState?.downtime_seconds || 0;
-
-        if (previousState) {
-          const timeDiff = Math.floor((Date.now() - new Date(previousState.last_checked).getTime()) / 1000);
-          if (status === 1) {
-            uptimeSeconds += timeDiff;
-          } else {
-            downtimeSeconds += timeDiff;
-          }
-        }
-
+        // SIMPLIFIED ENTITY - only what we actually have from PBX
         const entity: DeepPartial<TrunkMonitoringEntity> = {
           pbx_id: 'pbx-labs1',
           trunk_id: trunkId,
           trunk_name: trunkName,
-          peer_name: trunk.username || trunkName,
-          source_type: sourceType,
-          destination_type: destinationType,
-          source_ip: 'labs1.ras.yeastar.com',
-          destination_ip: destinationIp,
-          status,
+          status: status,
           status_text: this.getTrunkStatusText(status),
-          protocol: 'SIP',
-          codec: 'G.711',
-          current_bandwidth_in: bandwidth?.in,  // ✅ Now populated from bandwidth_monitoring
-          current_bandwidth_out: bandwidth?.out,  // ✅ Now populated from bandwidth_monitoring
-          current_latency_ms: latency,  // ✅ Now populated from network_monitoring
-          active_calls: this.getActiveCalls(trunkId),
-          ip_reachability: status === 1,
           status_changed_at: statusChangedAt,
-          uptime_seconds: uptimeSeconds,
-          downtime_seconds: downtimeSeconds,
           last_checked: new Date(),
-          mno_info: this.getMNOInfo(trunkName),  // ✅ Now populated
-          devices_connected: undefined,
-          notes: undefined,
+          active_calls: this.getActiveCalls(trunkId),
+          protocol: trunk.protocol || 'SIP',
+          codec: trunk.codec || 'G.711',
         };
 
         await this.trunkMonitoringRepo.save(entity);
 
+        // Update state tracker
         this.previousTrunkStates.set(trunkId, {
-          status,
+          status: status,
           status_changed_at: statusChangedAt,
           last_checked: new Date(),
-          uptime_seconds: uptimeSeconds,
-          downtime_seconds: downtimeSeconds,
         });
 
         if (statusChanged) {
@@ -219,6 +119,9 @@ export class MonitoringService implements OnModuleDestroy {
     }
   }
 
+  /**
+   * Get active calls count for a specific trunk
+   */
   private getActiveCalls(trunkId: string): number {
     return this.callsCache.filter((call: any) => {
       const members = call.members || [];
@@ -229,20 +132,9 @@ export class MonitoringService implements OnModuleDestroy {
     }).length;
   }
 
-  private getMNOInfo(trunkName: string): any {
-    const name = trunkName.toLowerCase();
-    if (name.includes('mtn')) {
-      return { name: 'MTN', carrier: 'mtn', country: 'Zambia' };
-    }
-    if (name.includes('airtel')) {
-      return { name: 'Airtel', carrier: 'airtel', country: 'Zambia' };
-    }
-    if (name.includes('zamtel')) {
-      return { name: 'Zamtel', carrier: 'zamtel', country: 'Zambia' };
-    }
-    return null;
-  }
-
+  /**
+   * Map status code to human-readable text
+   */
   private getTrunkStatusText(status: number): string {
     const map: Record<number, string> = {
       1: 'idle',
@@ -262,6 +154,9 @@ export class MonitoringService implements OnModuleDestroy {
     }
   }
 
+  /**
+   * Get current system status (for health checks and monitoring)
+   */
   getStatus() {
     const uptimeSeconds = Math.floor((Date.now() - this.startTime) / 1000);
 
