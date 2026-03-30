@@ -5,11 +5,13 @@ import { PbxModule } from '../pbx/pbx.module';
 import { NetworkMetricsEntity } from './entities/network-metrics.entity';
 import { NetworkMonitorService } from './network-monitor.service';
 import { PingService } from './ping.service';
+import { NetworkMonitoringEntity } from '../persistence/entities/network-monitoring.entity';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([NetworkMetricsEntity]),
     PbxModule,
+    TypeOrmModule.forFeature([NetworkMonitoringEntity]),
     ConfigModule,
   ],
   providers: [NetworkMonitorService, PingService],

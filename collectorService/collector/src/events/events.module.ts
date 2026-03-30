@@ -16,9 +16,6 @@ import { EventEmitter } from './processors/event-emitter';
 import { EventProcessor } from './processors/event-processor';
 
 // Handlers
-import { ExtensionEventHandler } from './handlers/extension-event.handler';
-import { AgentEventHandler } from './handlers/agent-event.handler';
-import { CallTransferEventHandler } from './handlers/call-transfer-event.handler';
 
 @Module({
   imports: [PbxModule, PersistenceModule],
@@ -29,9 +26,6 @@ import { CallTransferEventHandler } from './handlers/call-transfer-event.handler
     EventLogger,
     EventEmitter,
     EventProcessor,
-    ExtensionEventHandler,
-    AgentEventHandler,
-    CallTransferEventHandler,
   ],
   exports: [WebSocketManager, StateTracker],
 })

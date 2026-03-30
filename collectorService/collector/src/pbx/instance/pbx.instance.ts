@@ -78,7 +78,6 @@ export class PBXInstance {
    */
   private async refreshToken(): Promise<void> {
     try {
-      console.log(`[PBX ${this.id}] Refreshing token...`)
       
       await this.apiClient.refresh()
       

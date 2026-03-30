@@ -1,40 +1,41 @@
-import { Injectable, Logger, Optional } from '@nestjs/common';
+import { Injectable, Logger, Optional, OnModuleDestroy } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository, DeepPartial } from 'typeorm';
 import { StateTracker } from '../events/processors/state-tracker';
 import { WebSocketManager } from '../events/websocket/websocket.manager';
 import { PBXDataService } from './pbx-data.service';
+import { TrunkMonitoringEntity } from '../persistence/entities/trunk-monitoring.entity';
+import { NetworkMonitoringEntity } from '../persistence/entities/network-monitoring.entity';
+import { BandwidthMonitoringEntity } from '../persistence/entities/bandwidth-monitoring.entity';
 
-/**
- * Aggregates real-time monitoring data from all sources:
- * - Real-time PBX API data (extensions, trunks, calls)
- * - State tracking (agents, latency)
- * - WebSocket connection status
- */
 @Injectable()
-export class MonitoringService {
+export class MonitoringService implements OnModuleDestroy {
   private readonly logger = new Logger(MonitoringService.name);
   private readonly eventTimestamps = new Map<string, number>();
   private startTime = Date.now();
   private syncInterval: NodeJS.Timeout;
-  
-  // Cache for real PBX data
+
   private extensionsCache: any[] = [];
   private trunksCache: any[] = [];
   private callsCache: any[] = [];
+  private previousTrunkStates = new Map<string, any>();
 
   constructor(
     private readonly stateTracker: StateTracker,
     private readonly wsManager: WebSocketManager,
     private readonly pbxDataService: PBXDataService,
-    // network module is optional; use Optional decorator
+    @InjectRepository(TrunkMonitoringEntity)
+    private readonly trunkMonitoringRepo: Repository<TrunkMonitoringEntity>,
+    @InjectRepository(NetworkMonitoringEntity)
+    private readonly networkMonitoringRepo: Repository<NetworkMonitoringEntity>,
+    @InjectRepository(BandwidthMonitoringEntity)
+    private readonly bandwidthMonitoringRepo: Repository<BandwidthMonitoringEntity>,
     @Optional()
     private readonly networkMonitor?: import('../network/network-monitor.service').NetworkMonitorService,
   ) {
     this.startDataSync();
   }
 
-  /**
-   * Periodically fetch real data from PBX API endpoints (5 second cycle)
-   */
   private startDataSync(): void {
     this.syncInterval = setInterval(async () => {
       try {
@@ -43,245 +44,203 @@ export class MonitoringService {
           this.pbxDataService.getTrunks(),
           this.pbxDataService.getCalls(),
         ]);
-        
+
         this.extensionsCache = extensions;
         this.trunksCache = trunks;
         this.callsCache = calls;
 
-        if (extensions.length > 0 || trunks.length > 0 || calls.length > 0) {
+        if (trunks.length > 0) {
+          await this.writeTrunkStatuses(trunks);
+        }
+
+        if (extensions.length || trunks.length || calls.length) {
           this.logger.debug(
-            `Synced: ${extensions.length} extensions, ${trunks.length} trunks, ${calls.length} calls`,
+            `Synced: ${extensions.length} extensions, ${trunks.length} trunks, ${calls.length} calls`
           );
         }
       } catch (error) {
-        // Silently handle - PBX may not be available yet
+        this.logger.error(`Data sync error: ${error.message}`);
       }
     }, 5000);
   }
 
-  onModuleDestroy() {
-    if (this.syncInterval) {
-      clearInterval(this.syncInterval);
+  /**
+   * Get latest latency for an IP from network_monitoring table
+   */
+  private async getLatencyForIP(ip: string): Promise<number | undefined> {
+    try {
+      const result = await this.networkMonitoringRepo.findOne({
+        where: { ip_address: ip },
+        order: { timestamp: 'DESC' },
+      });
+      return result?.latency_ms || undefined;
+    } catch (error) {
+      return undefined;
     }
   }
 
   /**
-   * Get comprehensive status of all monitored resources
+   * Get latest bandwidth for a trunk from bandwidth_monitoring table
    */
-  async getStatus(): Promise<any> {
-    const uptime = Math.round((Date.now() - this.startTime) / 1000);
-
-    return {
-      timestamp: new Date().toISOString(),
-      uptime_seconds: uptime,
-      summary: {
-        total_pbx_connections: this.getTotalPBXConnections(),
-        total_events_processed: this.getTotalEventsProcessed(),
-        total_trunks_tracked: this.trunksCache.length,
-        total_extensions_tracked: this.extensionsCache.length,
-        total_calls_active: this.callsCache.length,
-        average_latency_ms: this.getAverageLatency(),
-      },
-      pbx_instances: this.getPBXStatus(),
-      trunks: this.getTrunksStatus(),
-      extensions: this.getExtensionsStatus(),
-      calls: this.getCallsStatus(),
-      agents: this.getAgentsStatus(),
-      network: this.networkMonitor ? await this.networkMonitor.getLatestStatus() : undefined,
-    };
-  }
-
-  /**
-   * Get PBX connection status
-   */
-  private getPBXStatus(): any[] {
-    const isConnected = this.extensionsCache.length > 0;
-    
-    return [
-      {
-        pbx_id: 'pbx-labs1',
-        host: 'labs1.ras.yeastar.com',
-        status: isConnected ? 'connected' : 'connecting',
-        websocket_status: 'open',
-        last_heartbeat: new Date(Date.now() - 5000).toISOString(),
-        uptime_seconds: Math.round((Date.now() - this.startTime) / 1000),
-        event_latency_ms: this.getAverageLatency(),
-        subscribed_events: [30007, 30008, 30010, 30011, 30012, 30013, 30022, 30023, 30029],
-        extensions_online: this.extensionsCache.filter(
-          (e: any) => e.status === 'registered' || e.status === 1,
-        ).length,
-        trunks_healthy: this.trunksCache.filter((t: any) => t.status === 1).length,
-      },
-    ];
-  }
-
-  /**
-   * Get all trunk states from real API data
-   */
-  private getTrunksStatus(): any[] {
-    if (this.trunksCache.length === 0) return [];
-
-    return this.trunksCache.map((trunk: any) => ({
-      trunk_id: trunk.trunk_id || trunk.id,
-      trunk_name: trunk.trunk_name || trunk.name,
-      status: trunk.status || 1,
-      status_text: this.getTrunkStatusText(trunk.status || 1),
-      type: trunk.type || trunk.trunk_type || 'unknown',
-      registered_ip: trunk.registered_ip || trunk.ip,
-      last_updated: new Date().toISOString(),
-    }));
-  }
-
-  /**
-  * Get all extension states from real API data
-  */
-  private getExtensionsStatus(): any[] {
-    if (this.extensionsCache.length === 0) return [];
-
-    return this.extensionsCache.map((ext: any) => {
-      // Check if extension is online (any device registered)
-      const isOnline = 
-        ext.online_status?.linkus_web?.status === 1 ||
-        ext.online_status?.linkus_mobile?.status === 1 ||
-        ext.online_status?.linkus_desktop?.status === 1 ||
-        ext.online_status?.sip_phone?.status === 1 ||
-        ext.online_status?.fxs_phone?.status === 1;
-
-      // Get IP address from mobile device if online
-      let ip = 'N/A';
-      if (ext.online_status?.linkus_mobile?.status === 1 && 
-          ext.online_status?.linkus_mobile?.status_list?.[0]?.ip) {
-        ip = ext.online_status.linkus_mobile.status_list[0].ip;
-      }
-
-      // Get device type
-      let userAgent = 'N/A';
-      if (ext.online_status?.linkus_mobile?.status === 1) {
-        userAgent = ext.online_status.linkus_mobile.status_list?.[0]?.linkus_dev_type || 'mobile';
-      } else if (ext.online_status?.linkus_web?.status === 1) {
-        userAgent = 'web';
-      } else if (ext.online_status?.linkus_desktop?.status === 1) {
-        userAgent = 'desktop';
-      } else if (ext.online_status?.sip_phone?.status === 1) {
-        userAgent = 'sip_phone';
-      }
-
-      return {
-        ext_id: ext.number,                
-        ext_name: ext.caller_id_name,  
-        registration_status: isOnline ? 1 : 0,
-        registration_text: isOnline ? 'online' : 'offline',
-        presence_status: ext.presence_status || 'unknown',
-        ip: ip,
-        user_agent: userAgent,
-        email: ext.email_addr || 'N/A',
-        role: ext.role_name || 'N/A',
-        last_updated: new Date().toISOString(),
-      };
-    });
-  }
-
-  /**
-   * Get all active calls (in progress)
-   */
-  private getCallsStatus(): any[] {
-    if (this.callsCache.length === 0) return [];
-
-    return this.callsCache.map((call: any) => {
-      // Extract members information
-      const members = call.members || [];
+  private async getBandwidthForTrunk(trunkId: string): Promise<{ in: number; out: number } | undefined> {
+    try {
+      const result = await this.bandwidthMonitoringRepo.findOne({
+        where: { trunk_id: trunkId },
+        order: { timestamp: 'DESC' },
+      });
       
-      // Find extension members
-      const extensions = members
-        .filter((m: any) => m.extension)
-        .map((m: any) => ({
-          number: m.extension.number,
-          status: m.extension.member_status,
-          channel: m.extension.channel_id,
-        }));
+      if (result) {
+        return {
+          in: result.bandwidth_in_mbps || 0,
+          out: result.bandwidth_out_mbps || 0,
+        };
+      }
+      return undefined;
+    } catch (error) {
+      return undefined;
+    }
+  }
 
-      // Find inbound members
+  /**
+   * Write trunk status to database
+   */
+  private async writeTrunkStatuses(trunks: any[]): Promise<void> {
+    for (const trunk of trunks) {
+      try {
+        const trunkId = String(trunk.id);
+        const trunkName = trunk.name;
+        const status = trunk.status || 1;
+        const previousState = this.previousTrunkStates.get(trunkId);
+
+        // Extract IP from host_port
+        let destinationIp = 'unknown';
+        let destinationPort = '5060';
+
+        if (trunk.host_port) {
+          const parts = trunk.host_port.split(':');
+          destinationIp = parts[0];
+          destinationPort = parts[1] || '5060';
+        }
+
+        // Determine source/destination type
+        let sourceType = 'PBX';
+        let destinationType = 'Unknown';
+
+        if (trunk.type === 'peer') {
+          sourceType = 'PBX';
+          destinationType = 'SBC';
+        } else if (trunk.type === 'register') {
+          sourceType = 'PBX';
+          const nameLower = trunkName.toLowerCase();
+          if (nameLower.includes('mtn')) {
+            destinationType = 'MNO-MTN';
+          } else if (nameLower.includes('airtel')) {
+            destinationType = 'MNO-Airtel';
+          } else if (nameLower.includes('zamtel')) {
+            destinationType = 'MNO-Zamtel';
+          } else if (nameLower.includes('vapi')) {
+            destinationType = 'VAPI-Gateway';
+          } else if (nameLower.includes('pbx') || nameLower.includes('cloudpbx')) {
+            destinationType = 'PBX-Peer';
+          } else {
+            destinationType = 'SIP-Gateway';
+          }
+        } else if (trunk.type === 'webtrunk') {
+          sourceType = 'PBX';
+          destinationType = 'WebRTC-Gateway';
+        }
+
+        // Get latency and bandwidth from monitoring tables
+        const latency = await this.getLatencyForIP(destinationIp);
+        const bandwidth = await this.getBandwidthForTrunk(trunkId);
+
+        // Status change detection
+        const statusChanged = previousState?.status !== status;
+        const statusChangedAt = statusChanged ? new Date() : (previousState?.status_changed_at || new Date());
+
+        // Calculate uptime/downtime
+        let uptimeSeconds = previousState?.uptime_seconds || 0;
+        let downtimeSeconds = previousState?.downtime_seconds || 0;
+
+        if (previousState) {
+          const timeDiff = Math.floor((Date.now() - new Date(previousState.last_checked).getTime()) / 1000);
+          if (status === 1) {
+            uptimeSeconds += timeDiff;
+          } else {
+            downtimeSeconds += timeDiff;
+          }
+        }
+
+        const entity: DeepPartial<TrunkMonitoringEntity> = {
+          pbx_id: 'pbx-labs1',
+          trunk_id: trunkId,
+          trunk_name: trunkName,
+          peer_name: trunk.username || trunkName,
+          source_type: sourceType,
+          destination_type: destinationType,
+          source_ip: 'labs1.ras.yeastar.com',
+          destination_ip: destinationIp,
+          status,
+          status_text: this.getTrunkStatusText(status),
+          protocol: 'SIP',
+          codec: 'G.711',
+          current_bandwidth_in: bandwidth?.in,  // ✅ Now populated from bandwidth_monitoring
+          current_bandwidth_out: bandwidth?.out,  // ✅ Now populated from bandwidth_monitoring
+          current_latency_ms: latency,  // ✅ Now populated from network_monitoring
+          active_calls: this.getActiveCalls(trunkId),
+          ip_reachability: status === 1,
+          status_changed_at: statusChangedAt,
+          uptime_seconds: uptimeSeconds,
+          downtime_seconds: downtimeSeconds,
+          last_checked: new Date(),
+          mno_info: this.getMNOInfo(trunkName),  // ✅ Now populated
+          devices_connected: undefined,
+          notes: undefined,
+        };
+
+        await this.trunkMonitoringRepo.save(entity);
+
+        this.previousTrunkStates.set(trunkId, {
+          status,
+          status_changed_at: statusChangedAt,
+          last_checked: new Date(),
+          uptime_seconds: uptimeSeconds,
+          downtime_seconds: downtimeSeconds,
+        });
+
+        if (statusChanged) {
+          this.logger.log(
+            `📊 Trunk ${trunkName} status changed: ${this.getTrunkStatusText(previousState?.status)} → ${this.getTrunkStatusText(status)}`
+          );
+        }
+      } catch (error) {
+        this.logger.error(`Failed to write trunk ${trunk.name}: ${error.message}`);
+      }
+    }
+  }
+
+  private getActiveCalls(trunkId: string): number {
+    return this.callsCache.filter((call: any) => {
+      const members = call.members || [];
       const inbound = members.find((m: any) => m.inbound);
       const outbound = members.find((m: any) => m.outbound);
-
-      // Determine from/to
-      let from = 'Unknown';
-      let to = 'Unknown';
-
-      if (extensions.length >= 2) {
-        from = extensions[0].number;
-        to = extensions[1].number;
-      } else if (inbound) {
-        from = inbound.inbound.from;
-        to = inbound.inbound.to;
-      } else if (outbound) {
-        from = outbound.outbound.from;
-        to = outbound.outbound.to;
-      } else if (extensions.length === 1) {
-        from = extensions[0].number;
-      }
-
-      return {
-        call_id: call.call_id,
-        from: from,
-        to: to,
-        members: extensions.map((e: any) => `${e.number} (${e.status})`),
-        member_count: members.length,
-        extensions: extensions,
-        trunk: inbound?.inbound?.trunk_name || outbound?.outbound?.trunk_name || 'N/A',
-        last_updated: new Date().toISOString(),
-      };
-    });
+      const trunkName = inbound?.inbound?.trunk_name || outbound?.outbound?.trunk_name;
+      return trunkName && trunkName.includes(trunkId);
+    }).length;
   }
-  /**
-   * Get all agent statuses from state tracker
-   */
-  private getAgentsStatus(): any[] {
-    const pbxId = 'pbx-labs1';
-    const agents = this.stateTracker.getAgentStates?.(pbxId) || new Map();
-    const result: any[] = [];
 
-    for (const [agentId, state] of agents) {
-      result.push({
-        agent_id: agentId,
-        agent_name: state.agent_name || agentId,
-        agent_status: state.agent_status,
-        status_text: this.getAgentStatusText(state.agent_status),
-        queue_id: state.queue_id,
-        last_updated: state.lastUpdated || new Date().toISOString(),
-      });
+  private getMNOInfo(trunkName: string): any {
+    const name = trunkName.toLowerCase();
+    if (name.includes('mtn')) {
+      return { name: 'MTN', carrier: 'mtn', country: 'Zambia' };
     }
-
-    return result;
-  }
-
-  /**
-   * Record event timestamp for latency calculation
-   */
-  recordEventLatency(eventId: string): void {
-    this.eventTimestamps.set(eventId, Date.now());
-  }
-
-  /**
-   * Get average event latency
-   */
-  getAverageLatency(): number {
-    if (this.eventTimestamps.size === 0) return 0;
-    const values = Array.from(this.eventTimestamps.values());
-    const now = Date.now();
-    const recentEvents = values.filter((ts) => now - ts < 100);
-    if (recentEvents.length === 0) return 0;
-    return Math.round(
-      recentEvents.reduce((sum, ts) => sum + (now - ts), 0) / recentEvents.length,
-    );
-  }
-
-  private getTotalPBXConnections(): number {
-    return this.extensionsCache.length > 0 ? 1 : 0;
-  }
-
-  private getTotalEventsProcessed(): number {
-    return this.eventTimestamps.size;
+    if (name.includes('airtel')) {
+      return { name: 'Airtel', carrier: 'airtel', country: 'Zambia' };
+    }
+    if (name.includes('zamtel')) {
+      return { name: 'Zamtel', carrier: 'zamtel', country: 'Zambia' };
+    }
+    return null;
   }
 
   private getTrunkStatusText(status: number): string {
@@ -297,23 +256,87 @@ export class MonitoringService {
     return map[status] || 'unknown';
   }
 
-  private getExtensionStatusText(status: any): string {
-    const map: Record<any, string> = {
-      0: 'unregistered',
-      1: 'registered',
-      2: 'busy',
-      3: 'offline',
-    };
-    return map[status] || 'unknown';
+  onModuleDestroy() {
+    if (this.syncInterval) {
+      clearInterval(this.syncInterval);
+    }
   }
 
-  private getAgentStatusText(status: any): string {
-    const map: Record<any, string> = {
-      0: 'not_available',
-      1: 'available',
-      2: 'busy',
-      3: 'paused',
+  getStatus() {
+    const uptimeSeconds = Math.floor((Date.now() - this.startTime) / 1000);
+
+    const pbxInstances = [
+      {
+        pbx_id: 'pbx-labs1',
+        host: 'labs1.ras.yeastar.com',
+        status: this.wsManager.isConnected('pbx-labs1') ? 'connected' : 'disconnected',
+        websocket_status: this.wsManager.isConnected('pbx-labs1') ? 'connected' : 'disconnected',
+        uptime_seconds: uptimeSeconds,
+        subscribed_events: this.stateTracker.getSubscribedEvents() || [],
+        event_latency_ms: this.wsManager.getLatency('pbx-labs1') || 0,
+      },
+    ];
+
+    const agents = this.extensionsCache
+      .filter(ext => ext.is_agent)
+      .map(agent => ({
+        agent_id: agent.extension,
+        agent_name: agent.name,
+        status_text: agent.status_text || 'unknown',
+        queue_id: agent.queue || 'N/A',
+        last_updated: new Date(),
+      }));
+
+    const trunks = this.trunksCache.map(t => {
+      const prev = this.previousTrunkStates.get(String(t.id)) || {};
+      return {
+        trunk_id: String(t.id),
+        trunk_name: t.name,
+        type: t.type,
+        status: t.status,
+        status_text: this.getTrunkStatusText(t.status),
+        host_port: t.host_port || 'N/A',
+        uptime_seconds: prev.uptime_seconds || 0,
+        downtime_seconds: prev.downtime_seconds || 0,
+        last_updated: prev.last_checked || new Date(),
+      };
+    });
+
+    const extensions = this.extensionsCache.map(e => ({
+      ext_id: e.extension,
+      ext_name: e.name,
+      registration_text: e.status_text || 'unknown',
+      ip: e.ip || 'N/A',
+      last_updated: new Date(),
+    }));
+
+    const calls = this.callsCache.map(c => ({
+      call_id: c.call_id,
+      duration_seconds: c.duration_seconds || 0,
+      members: c.members || [],
+      last_updated: new Date(),
+    }));
+
+    const latencies = pbxInstances.map(p => p.event_latency_ms || 0);
+    const averageLatency = latencies.length
+      ? Math.floor(latencies.reduce((a, b) => a + b, 0) / latencies.length)
+      : 0;
+
+    return {
+      uptime_seconds: uptimeSeconds,
+      summary: {
+        total_pbx_connections: pbxInstances.filter(p => p.status === 'connected').length,
+        total_trunks_tracked: trunks.length,
+        total_extensions_tracked: extensions.length,
+        total_calls_active: calls.length,
+        total_agents_tracked: agents.length,
+      },
+      average_latency: averageLatency,
+      pbx_instances: pbxInstances,
+      trunks,
+      extensions,
+      calls,
+      agents,
     };
-    return map[status] || 'unknown';
   }
 }

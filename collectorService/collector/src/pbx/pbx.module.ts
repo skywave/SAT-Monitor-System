@@ -1,8 +1,17 @@
 import { Module } from '@nestjs/common';
-import { PBXManager } from './pbx.manager'
+import { HttpModule } from '@nestjs/axios';
+import { PBXManager } from './pbx.manager';
+import { PBXDataService } from '../supervisor/pbx-data.service';
 
 @Module({
-    providers: [PBXManager],
-    exports: [PBXManager]
+  imports: [HttpModule],
+  providers: [
+    PBXManager,
+    PBXDataService,
+  ],
+  exports: [
+    PBXManager,
+    PBXDataService,
+  ],
 })
 export class PbxModule {}

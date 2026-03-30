@@ -2,8 +2,8 @@ import { Injectable, Logger, OnModuleInit, OnModuleDestroy } from '@nestjs/commo
 import { ConfigService } from '@nestjs/config';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { PingService, PingResult } from './ping.service';
-import { NetworkMetricsEntity } from './entities/network-metrics.entity';
+import { PingService } from './ping.service';
+import { NetworkMonitoringEntity } from '../persistence/entities/network-monitoring.entity';
 import { PBXManager } from '../pbx/pbx.manager';
 import { NetworkStatusDto } from './dto/network-status.dto';
 
@@ -18,8 +18,8 @@ export class NetworkMonitorService implements OnModuleInit, OnModuleDestroy {
     private readonly pbxManager: PBXManager,
     private readonly configService: ConfigService,
     private readonly pingService: PingService,
-    @InjectRepository(NetworkMetricsEntity)
-    private readonly metricsRepo: Repository<NetworkMetricsEntity>,
+    @InjectRepository(NetworkMonitoringEntity)
+    private readonly metricsRepo: Repository<NetworkMonitoringEntity>,
   ) {}
 
   async onModuleInit() {
@@ -27,7 +27,7 @@ export class NetworkMonitorService implements OnModuleInit, OnModuleDestroy {
       this.configService.get<number>('NETWORK_PING_INTERVAL_SEC', 30),
     );
 
-    // always monitor PBX host, attempt to resolve dynamic IP
+    // Always monitor PBX host
     const pbxInstance = this.pbxManager.getInstance('pbx-labs1');
     if (pbxInstance && pbxInstance.ip) {
       this.targets.push(pbxInstance.ip);
@@ -35,7 +35,7 @@ export class NetworkMonitorService implements OnModuleInit, OnModuleDestroy {
       this.targets.push('labs1.ras.yeastar.com');
     }
 
-    // always check internet connectivity
+    // Always check internet connectivity
     this.targets.push('8.8.8.8');
 
     const extra = this.configService.get<string>('NETWORK_MONITOR_TARGETS');
@@ -47,7 +47,7 @@ export class NetworkMonitorService implements OnModuleInit, OnModuleDestroy {
       this.targets.push(...list);
     }
 
-    // deduplicate
+    // Deduplicate
     this.targets = Array.from(new Set(this.targets));
 
     this.logger.log(`Network targets: ${this.targets.join(', ')}`);
@@ -60,26 +60,23 @@ export class NetworkMonitorService implements OnModuleInit, OnModuleDestroy {
         this.logger.error('Ping cycle error', err);
       });
     }, this.pingIntervalSec * 1000);
-    // run once immediately
+    
+    // Run once immediately
     this.performPingCycle().catch((err) =>
       this.logger.error('Initial ping cycle failed', err),
     );
   }
 
-  /**
-   * Refresh PBX IP target if instance becomes available later.
-   */
   private refreshPBXTarget(): void {
     const inst = this.pbxManager.getInstance('pbx-labs1');
     if (inst && inst.ip) {
       const existing = this.targets.find((t) => t === inst.ip);
       if (!existing) {
-        // remove domain fallback if present
         this.targets = this.targets.filter(
           (t) => t !== 'labs1.ras.yeastar.com',
         );
         this.targets.unshift(inst.ip);
-        this.logger.log(`pbx IP resolved, updating target list: ${inst.ip}`);
+        this.logger.log(`PBX IP resolved, updating target list: ${inst.ip}`);
       }
     }
   }
@@ -89,15 +86,23 @@ export class NetworkMonitorService implements OnModuleInit, OnModuleDestroy {
     const results = await Promise.allSettled(
       this.targets.map((t) => this.pingService.ping(t)),
     );
+    
     for (const res of results) {
       if (res.status === 'fulfilled') {
         const result = res.value;
+        
+        // ✅ Map to new schema
         const entity = this.metricsRepo.create({
-          host: result.host,
-          is_reachable: result.isAlive,
-          latency_ms: result.latency,
+          device_name: this.getDeviceName(result.host),
+          device_type: this.getDeviceType(result.host),
+          ip_address: result.host,
+          hostname: result.host,
+          reachable: result.isAlive,
+          latency_ms: result.latency ?? undefined,
+          source: 'sat-monitor',
           timestamp: result.timestamp,
         });
+        
         await this.metricsRepo.save(entity);
       } else {
         this.logger.warn(`Ping promise rejected: ${res.reason}`);
@@ -106,15 +111,40 @@ export class NetworkMonitorService implements OnModuleInit, OnModuleDestroy {
   }
 
   /**
-   * Return the most recent row per host converted into DTOs
+   * Determine device name from host
+   */
+  private getDeviceName(host: string): string {
+    if (host.includes('yeastar.com') || host.includes('pbx')) {
+      return 'PBX-Primary';
+    }
+    if (host === '8.8.8.8') {
+      return 'Google-DNS';
+    }
+    return `Device-${host}`;
+  }
+
+  /**
+   * Determine device type from host
+   */
+  private getDeviceType(host: string): string {
+    if (host.includes('yeastar.com') || host.includes('pbx')) {
+      return 'pbx';
+    }
+    if (host === '8.8.8.8') {
+      return 'dns';
+    }
+    return 'gateway';  // Default
+  }
+
+  /**
+   * Get latest status per device
    */
   async getLatestStatus(): Promise<NetworkStatusDto[]> {
-    // use subquery to get max timestamp per host
     const sub = this.metricsRepo
       .createQueryBuilder('m2')
       .select('MAX(m2.timestamp)', 'max_ts')
-      .where('m2.host = m.host')
-      .groupBy('m2.host');
+      .where('m2.device_name = m.device_name')
+      .groupBy('m2.device_name');
 
     const rows = await this.metricsRepo
       .createQueryBuilder('m')
@@ -123,14 +153,17 @@ export class NetworkMonitorService implements OnModuleInit, OnModuleDestroy {
       .getMany();
 
     return rows.map((r) => ({
-      host: r.host,
-      isReachable: r.is_reachable,
+      host: r.device_name,
+      isReachable: r.reachable,
       latencyMs: r.latency_ms,
       lastChecked: r.timestamp.toISOString(),
-      status: r.is_reachable ? 'up' : 'down',
+      status: r.reachable ? 'up' : 'down',
     }));
   }
 
+  /**
+   * Get average latency for a device
+   */
   async getAverageLatency(
     host: string,
     minutes: number,
@@ -139,7 +172,7 @@ export class NetworkMonitorService implements OnModuleInit, OnModuleDestroy {
     const raw = await this.metricsRepo
       .createQueryBuilder('m')
       .select('AVG(m.latency_ms)', 'avg')
-      .where('m.host = :host', { host })
+      .where('m.device_name = :host', { host })
       .andWhere('m.timestamp >= :since', { since })
       .getRawOne();
     return raw?.avg ? parseFloat(raw.avg) : null;

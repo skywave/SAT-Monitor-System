@@ -1,37 +1,18 @@
 import React, { useState, useEffect } from 'react';
-import { useHistory } from 'react-router-dom';
-import './NetworkMonitoring.css';
+import { useNavigate } from 'react-router-dom';
+import './networkmonitoring.css';
+import { createClient } from '@supabase/supabase-js';
+
+// Supabase configuration
+const supabaseUrl = 'https://mlpfnfbgpraprzuysnge.supabase.co';
+const supabaseKey = 'sb_publishable_F6Hzt-MAkdwuxVMYz4DKtA__FSnDOVM';
+const supabase = createClient(supabaseUrl, supabaseKey);
 
 const NetworkMonitoring = () => {
-  const history = useHistory();
+  const navigate = useNavigate();
   
   // Individual trunk status
-  const [trunks, setTrunks] = useState([
-    {
-      id: 1,
-      name: 'Gateway',
-      ipAddress: '192.168.1.1',
-      status: 'up'
-    },
-    {
-      id: 2,
-      name: 'NAS',
-      ipAddress: '192.168.1.50',
-      status: 'up'
-    },
-    {
-      id: 3,
-      name: 'MNO',
-      ipAddress: '10.20.30.40',
-      status: 'down'
-    },
-    {
-      id: 4,
-      name: 'Customer',
-      ipAddress: '172.16.10.100',
-      status: 'up'
-    }
-  ]);
+  const [trunks, setTrunks] = useState([]);
 
   // IP Reachability from SAT Monitor
   const [satMonitorReachability, setSatMonitorReachability] = useState({
@@ -42,7 +23,7 @@ const NetworkMonitoring = () => {
     google: 'reachable'
   });
 
-  // IP Reachability from SBC
+  // IP Reachability from SBC (mock - no SBC data yet)
   const [sbcReachability, setSbcReachability] = useState({
     gateway: 'reachable',
     nas: 'reachable',
@@ -53,13 +34,13 @@ const NetworkMonitoring = () => {
 
   // Latency from SAT Monitor
   const [satMonitorLatency, setSatMonitorLatency] = useState({
-    gateway: 12,
-    nas: 15,
-    customer: 18,
-    google: 8
+    gateway: 0,
+    nas: 0,
+    customer: 0,
+    google: 0
   });
 
-  // Latency from SBC
+  // Latency from SBC (mock)
   const [sbcLatency, setSbcLatency] = useState({
     gateway: 5,
     nas: 7,
@@ -70,14 +51,14 @@ const NetworkMonitoring = () => {
 
   // Bandwidth from SAT Monitor
   const [satMonitorBandwidth, setSatMonitorBandwidth] = useState({
-    gateway: 256,
-    nas: 256,
-    mno: 128,
-    customer: 512,
-    google: 1024
+    gateway: 0,
+    nas: 0,
+    mno: 0,
+    customer: 0,
+    google: 0
   });
 
-  // Bandwidth from SBC
+  // Bandwidth from SBC (mock)
   const [sbcBandwidth, setSbcBandwidth] = useState({
     gateway: 512,
     nas: 256,
@@ -88,57 +69,174 @@ const NetworkMonitoring = () => {
 
   // Call statistics
   const [callStats, setCallStats] = useState({
-    // Per-trunk stats
-    trunks: {
-      'MTN SIP': { active: 12, failed: 3, unanswered: 7, rejected: 2 },
-      'Airtel': { active: 0, failed: 15, unanswered: 8, rejected: 5 },
-      'Zamtel Primary': { active: 8, failed: 1, unanswered: 3, rejected: 0 },
-      'Orange SIP': { active: 5, failed: 2, unanswered: 4, rejected: 1 }
-    },
-    // Aggregated stats
-    customerFacing: { active: 25, failed: 6, unanswered: 14, rejected: 3 },
-    mnoFacing: { active: 25, failed: 21, unanswered: 22, rejected: 8 },
-    gatewayFacing: { active: 25, failed: 0, unanswered: 0, rejected: 0 }
+    trunks: {},
+    customerFacing: { active: 0, failed: 0, unanswered: 0, rejected: 0 },
+    mnoFacing: { active: 0, failed: 0, unanswered: 0, rejected: 0 },
+    gatewayFacing: { active: 0, failed: 0, unanswered: 0, rejected: 0 }
   });
 
-  // Simulate real-time updates
-  useEffect(() => {
-    const interval = setInterval(() => {
-      // Update latencies
-      setSatMonitorLatency(prev => ({
-        gateway: Math.floor(Math.random() * 10) + 8,
-        nas: Math.floor(Math.random() * 10) + 10,
-        customer: Math.floor(Math.random() * 10) + 13,
-        google: Math.floor(Math.random() * 5) + 5
-      }));
-
-      setSbcLatency(prev => ({
-        gateway: Math.floor(Math.random() * 5) + 3,
-        nas: Math.floor(Math.random() * 5) + 5,
-        mno: prev.mno,
-        customer: Math.floor(Math.random() * 8) + 7,
-        google: Math.floor(Math.random() * 5) + 4
-      }));
-
-      // Update active calls
-      setCallStats(prev => ({
-        ...prev,
-        customerFacing: {
-          ...prev.customerFacing,
-          active: Math.floor(Math.random() * 30) + 15
-        },
-        mnoFacing: {
-          ...prev.mnoFacing,
-          active: Math.floor(Math.random() * 30) + 15
+  // Fetch trunk status
+  const fetchTrunks = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('trunk_monitoring')
+        .select('trunk_id, trunk_name, destination_ip, status_text')
+        .order('last_checked', { ascending: false });
+      
+      if (error) throw error;
+      
+      // Get unique trunks (latest entry for each)
+      const trunkMap = new Map();
+      data.forEach(trunk => {
+        if (!trunkMap.has(trunk.trunk_id)) {
+          trunkMap.set(trunk.trunk_id, {
+            id: trunk.trunk_id,
+            name: trunk.trunk_name,
+            ipAddress: trunk.destination_ip,
+            status: trunk.status_text === 'idle' ? 'up' : 'down'
+          });
         }
-      }));
-    }, 5000);
+      });
+      
+      setTrunks(Array.from(trunkMap.values()));
+    } catch (error) {
+      console.error('Error fetching trunks:', error);
+    }
+  };
 
+  // Fetch network reachability and latency
+  const fetchNetworkData = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('network_monitoring')
+        .select('device_name, ip_address, reachable, latency_ms')
+        .order('timestamp', { ascending: false })
+        .limit(20);
+      
+      if (error) throw error;
+      
+      // Get latest for each device
+      const deviceMap = new Map();
+      data.forEach(device => {
+        const key = device.device_name.toLowerCase();
+        if (!deviceMap.has(key)) {
+          deviceMap.set(key, device);
+        }
+      });
+      
+      // Map to state
+      const reachability = {};
+      const latency = {};
+      
+      deviceMap.forEach((device, key) => {
+        const status = device.reachable ? 'reachable' : 'unreachable';
+        
+        if (key.includes('gateway') || key.includes('router')) {
+          reachability.gateway = status;
+          latency.gateway = device.latency_ms || 0;
+        } else if (key.includes('nas')) {
+          reachability.nas = status;
+          latency.nas = device.latency_ms || 0;
+        } else if (key.includes('mno')) {
+          reachability.mno = status;
+        } else if (key.includes('customer')) {
+          reachability.customer = status;
+          latency.customer = device.latency_ms || 0;
+        } else if (key.includes('google') || key.includes('dns')) {
+          reachability.google = status;
+          latency.google = device.latency_ms || 0;
+        }
+      });
+      
+      setSatMonitorReachability(prev => ({ ...prev, ...reachability }));
+      setSatMonitorLatency(prev => ({ ...prev, ...latency }));
+    } catch (error) {
+      console.error('Error fetching network data:', error);
+    }
+  };
+
+  // Fetch bandwidth data
+  const fetchBandwidth = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('bandwidth_monitoring')
+        .select('device_name, bandwidth_out_mbps')
+        .order('timestamp', { ascending: false })
+        .limit(10);
+      
+      if (error) throw error;
+      
+      const bandwidth = {};
+      data.forEach(device => {
+        const key = device.device_name.toLowerCase();
+        const kbps = Math.round((device.bandwidth_out_mbps || 0) * 1000);
+        
+        if (key.includes('gateway')) bandwidth.gateway = kbps;
+        else if (key.includes('nas')) bandwidth.nas = kbps;
+        else if (key.includes('mno')) bandwidth.mno = kbps;
+        else if (key.includes('customer')) bandwidth.customer = kbps;
+      });
+      
+      setSatMonitorBandwidth(prev => ({ ...prev, ...bandwidth }));
+    } catch (error) {
+      console.error('Error fetching bandwidth:', error);
+    }
+  };
+
+  // Fetch call statistics
+  const fetchCallStats = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('call_monitoring')
+        .select('trunk_id, active_calls, total_calls, failed_calls, no_answer_calls, rejected_calls')
+        .eq('period_type', 'minute')
+        .order('period_start', { ascending: false })
+        .limit(10);
+      
+      if (error) throw error;
+      
+      if (data && data.length > 0) {
+        // Aggregate stats
+        const aggregated = data.reduce((acc, row) => {
+          acc.active += row.active_calls || 0;
+          acc.failed += row.failed_calls || 0;
+          acc.unanswered += row.no_answer_calls || 0;
+          acc.rejected += row.rejected_calls || 0;
+          return acc;
+        }, { active: 0, failed: 0, unanswered: 0, rejected: 0 });
+        
+        setCallStats({
+          trunks: {},
+          customerFacing: aggregated,
+          mnoFacing: aggregated,
+          gatewayFacing: { active: aggregated.active, failed: 0, unanswered: 0, rejected: 0 }
+        });
+      }
+    } catch (error) {
+      console.error('Error fetching call stats:', error);
+    }
+  };
+
+  // Load all data
+  useEffect(() => {
+    const loadData = async () => {
+      await Promise.all([
+        fetchTrunks(),
+        fetchNetworkData(),
+        fetchBandwidth(),
+        fetchCallStats()
+      ]);
+    };
+    
+    loadData();
+    
+    // Refresh every 5 seconds
+    const interval = setInterval(loadData, 5000);
     return () => clearInterval(interval);
   }, []);
 
   const handleBackToDashboard = () => {
-    history.push('/dashboard');
+    navigate('/dashboard');
   };
 
   const getStatusColor = (status) => {
@@ -185,7 +283,7 @@ const NetworkMonitoring = () => {
         </div>
 
         <div className="trunk-status-grid">
-          {trunks.map(trunk => (
+          {trunks.length > 0 ? trunks.map(trunk => (
             <div key={trunk.id} className={`trunk-card ${getStatusColor(trunk.status)}`}>
               <div className="trunk-name">{trunk.name}</div>
               <div className="trunk-ip">{trunk.ipAddress}</div>
@@ -194,7 +292,11 @@ const NetworkMonitoring = () => {
                 {trunk.status === 'up' ? 'UP' : 'DOWN'}
               </div>
             </div>
-          ))}
+          )) : (
+            <div style={{padding: '2rem', textAlign: 'center', gridColumn: '1 / -1'}}>
+              Loading trunks...
+            </div>
+          )}
         </div>
 
         {/* Section 2: IP Reachability */}
@@ -314,7 +416,6 @@ const NetworkMonitoring = () => {
               </tr>
             </thead>
             <tbody>
-              {/* SAT Monitor Latencies */}
               <tr>
                 <td className="source-cell">SAT Monitor</td>
                 <td>Gateway</td>
@@ -340,7 +441,6 @@ const NetworkMonitoring = () => {
                 <td><span className="quality-badge excellent">{getLatencyQuality(satMonitorLatency.google)}</span></td>
               </tr>
               
-              {/* SBC Latencies */}
               <tr className="separator-row">
                 <td className="source-cell">SBC</td>
                 <td>Gateway</td>
@@ -419,7 +519,6 @@ const NetworkMonitoring = () => {
           <span className="section-subtitle">Since 00:00 Today</span>
         </div>
 
-        {/* Aggregated Stats */}
         <div className="call-aggregate-grid">
           <div className="aggregate-card customer">
             <h4>Customer Facing Side</h4>
@@ -502,15 +601,21 @@ const NetworkMonitoring = () => {
               </tr>
             </thead>
             <tbody>
-              {Object.entries(callStats.trunks).map(([trunkName, stats]) => (
-                <tr key={trunkName}>
-                  <td className="trunk-name-cell">{trunkName}</td>
-                  <td className="stat-cell active">{stats.active}</td>
-                  <td className="stat-cell failed">{stats.failed}</td>
-                  <td className="stat-cell unanswered">{stats.unanswered}</td>
-                  <td className="stat-cell rejected">{stats.rejected}</td>
+              {Object.keys(callStats.trunks).length > 0 ? (
+                Object.entries(callStats.trunks).map(([trunkName, stats]) => (
+                  <tr key={trunkName}>
+                    <td className="trunk-name-cell">{trunkName}</td>
+                    <td className="stat-cell active">{stats.active}</td>
+                    <td className="stat-cell failed">{stats.failed}</td>
+                    <td className="stat-cell unanswered">{stats.unanswered}</td>
+                    <td className="stat-cell rejected">{stats.rejected}</td>
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td colSpan="5" style={{textAlign: 'center', padding: '1rem'}}>No per-trunk data available</td>
                 </tr>
-              ))}
+              )}
             </tbody>
           </table>
         </div>

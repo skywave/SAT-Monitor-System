@@ -162,4 +162,22 @@ export class StateTracker {
   clear(): void {
     this.states.clear();
   }
+
+  // ------------------- NEW ADDITIONS -------------------
+
+  private subscribedEvents: NormalizedEvent[] = [];
+
+  /**
+   * Track a new subscribed event
+   */
+  public trackSubscribedEvent(event: NormalizedEvent) {
+    this.subscribedEvents.push(event);
+  }
+
+  /**
+   * Get all currently subscribed events
+   */
+  public getSubscribedEvents(): NormalizedEvent[] {
+    return [...this.subscribedEvents]; // return a shallow copy
+  }
 }

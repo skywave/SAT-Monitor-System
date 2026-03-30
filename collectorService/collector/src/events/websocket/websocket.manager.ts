@@ -89,4 +89,24 @@ export class WebSocketManager implements OnModuleInit, OnModuleDestroy {
     this.connections.forEach(conn => conn.disconnect());
     this.connections.clear();
   }
+
+  // -------------------------
+  // Added Methods for MonitoringService
+  // -------------------------
+  
+  /**
+   * Check if a PBX WebSocket is connected
+   */
+  isConnected(pbxId: string): boolean {
+    const conn = this.connections.get(pbxId);
+    return conn ? conn.isConnected() : false;
+  }
+
+  /**
+   * Get the last known latency in ms for a PBX connection
+   */
+  getLatency(pbxId: string): number {
+    const conn = this.connections.get(pbxId);
+    return conn ? conn.getLatency() : 0;
+  }
 }

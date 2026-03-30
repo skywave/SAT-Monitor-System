@@ -1,6 +1,14 @@
 // src/config/database.config.ts
 import { TypeOrmModuleOptions } from '@nestjs/typeorm';
 import * as dotenv from 'dotenv';
+import { TrunkMonitoringEntity } from '../persistence/entities/trunk-monitoring.entity';
+import { NetworkMonitoringEntity } from '../persistence/entities/network-monitoring.entity';
+import { BandwidthMonitoringEntity } from '../persistence/entities/bandwidth-monitoring.entity';
+import { CallMonitoringEntity } from '../persistence/entities/call-monitoring.entity';
+import { SystemConfigurationEntity } from '../persistence/entities/system-configuration.entity';
+import { EventEntity } from '../persistence/entities/event.entity';
+import { AlertManagementEntity } from '../persistence/entities/alert-management.entity';
+
 dotenv.config();
 
 export const databaseConfig: TypeOrmModuleOptions = {
@@ -13,8 +21,16 @@ export const databaseConfig: TypeOrmModuleOptions = {
   ssl: { 
     rejectUnauthorized: false // Required for Supabase connections
   },
-  entities: [__dirname + '/../**/*.entity{.ts,.js}'],
-  synchronize: false, // Keep this false now that migrations are live
+  entities: [
+    TrunkMonitoringEntity,
+    NetworkMonitoringEntity,
+    BandwidthMonitoringEntity,
+    CallMonitoringEntity,
+    SystemConfigurationEntity,
+    EventEntity,
+    AlertManagementEntity,
+  ],
+  synchronize: false,
   logging: true,
 };
 

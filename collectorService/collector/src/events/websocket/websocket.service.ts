@@ -15,6 +15,10 @@ export class YeastarWebSocketService {
   // 📡 Output Stream: The Manager listens to this
   private readonly _events$ = new Subject<YeastarEvent>();
 
+  // ✅ Track connection status and latency
+  private connected = false;
+  private latencyMs = 0;
+
   constructor(
     private readonly pbxId: string,
     private readonly host: string,
@@ -51,6 +55,7 @@ export class YeastarWebSocketService {
 
     this.ws.on('open', () => {
       this.logger.log('✅ Connected');
+      this.connected = true;
       this.startHeartbeat();
       // Subscribe to Extension, Trunk, Call, Agent, and Transfer events
       this.subscribe([
@@ -68,10 +73,12 @@ export class YeastarWebSocketService {
 
     this.ws.on('message', (data: WebSocket.RawData) => {
       try {
-        const raw = data.toString();;
+        const raw = data.toString();
         // Filter out heartbeats/pongs
         if (raw === 'heartbeat response') {
           this.logger.debug('Received heartbeat response');  
+          // measure pseudo-latency here
+          this.latencyMs = 0; // or compute if you have timestamp info
           return;
         }
 
@@ -100,11 +107,13 @@ export class YeastarWebSocketService {
     this.ws.on('close', (code, reason) => {
       this.logger.warn(`Closed (${code}): ${reason}`);
       this.cleanup();
+      this.connected = false;
       this.scheduleReconnect();
     });
 
     this.ws.on('error', (err) => {
         this.logger.error(`Error: ${err.message}`);
+        this.connected = false;
     });
   }
 
@@ -145,5 +154,15 @@ export class YeastarWebSocketService {
     this.isDestroyed = true;
     this.cleanup();
     this.ws?.close();
+    this.connected = false;
+  }
+
+  // ✅ NEW METHODS
+  public isConnected(): boolean {
+    return this.connected && this.ws?.readyState === WebSocket.OPEN;
+  }
+
+  public getLatency(): number {
+    return this.latencyMs;
   }
 }

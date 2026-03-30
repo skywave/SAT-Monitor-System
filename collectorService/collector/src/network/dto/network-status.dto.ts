@@ -1,7 +1,7 @@
 export interface NetworkStatusDto {
   host: string;
   isReachable: boolean;
-  latencyMs: number | null;
+  latencyMs?: number;
   lastChecked: string; // ISO timestamp
   status: 'up' | 'down' | 'unknown';
 }

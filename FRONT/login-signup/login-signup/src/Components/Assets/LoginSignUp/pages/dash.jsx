@@ -1,83 +1,39 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './dash.css';
+import { getTrunks, getNetworkStatus } from '../../../../services/monitoringService';
 
 const Dashboard = () => {
   const navigate = useNavigate();
   
-  // Mock data - replace with real API calls
-  const [trunks, setTrunks] = useState([
-    {
-      id: 1,
-      name: 'MTN SIP',
-      pbx: 'PBX1',
-      status: 'up',
-      latency: 23,
-      lastChanged: '2 mins ago'
-    },
-    {
-      id: 2,
-      name: 'Airtel',
-      pbx: 'PBX2',
-      status: 'down',
-      latency: null,
-      lastChanged: '10 secs ago'
-    },
-    {
-      id: 3,
-      name: 'Zamtel Primary',
-      pbx: 'PBX1',
-      status: 'up',
-      latency: 18,
-      lastChanged: '5 mins ago'
-    },
-    {
-      id: 4,
-      name: 'Zamtel Backup',
-      pbx: 'PBX3',
-      status: 'warning',
-      latency: 156,
-      lastChanged: '1 min ago'
-    },
-    {
-      id: 5,
-      name: 'Orange SIP',
-      pbx: 'PBX2',
-      status: 'up',
-      latency: 31,
-      lastChanged: '3 mins ago'
-    },
-    {
-      id: 6,
-      name: 'MTN Backup',
-      pbx: 'PBX3',
-      status: 'up',
-      latency: 27,
-      lastChanged: '4 mins ago'
-    },
-    {
-      id: 7,
-      name: 'Liquid SIP',
-      pbx: 'PBX1',
-      status: 'up',
-      latency: 42,
-      lastChanged: '1 min ago'
-    },
-    {
-      id: 8,
-      name: 'TopStar',
-      pbx: 'PBX2',
-      status: 'up',
-      latency: 35,
-      lastChanged: '6 mins ago'
-    }
-  ]);
-
+  // Real data from Supabase
+  const [trunks, setTrunks] = useState([]);
   const [networkStatus, setNetworkStatus] = useState({
     status: 'optimal',
-    avgLatency: 33,
+    avgLatency: 0,
     packetLoss: 0
   });
+  const [loading, setLoading] = useState(true);
+
+  // Load data on mount and refresh every 5 seconds
+  useEffect(() => {
+    const loadData = async () => {
+      setLoading(true);
+      const [trunksData, networkData] = await Promise.all([
+        getTrunks(),
+        getNetworkStatus()
+      ]);
+      setTrunks(trunksData);
+      setNetworkStatus(networkData);
+      setLoading(false);
+    };
+    
+    loadData();
+    
+    // Refresh every 5 seconds
+    const interval = setInterval(loadData, 5000);
+    return () => clearInterval(interval);
+  }, []);
 
   // Calculate stats
   const totalTrunks = trunks.length;
@@ -221,39 +177,43 @@ const Dashboard = () => {
           </div>
 
           <div className="table-wrapper">
-            <table className="trunk-table">
-              <thead>
-                <tr>
-                  <th>Trunk Name</th>
-                  <th>PBX</th>
-                  <th>Status</th>
-                  <th>Latency</th>
-                  <th>Last Change</th>
-                </tr>
-              </thead>
-              <tbody>
-                {sortedTrunks.map(trunk => (
-                  <tr 
-                    key={trunk.id} 
-                    className={`trunk-row ${trunk.status}`}
-                    onClick={() => handleTrunkClick(trunk)}
-                  >
-                    <td className="trunk-name">{trunk.name}</td>
-                    <td className="trunk-pbx">{trunk.pbx}</td>
-                    <td className="trunk-status">
-                      <span className={`status-badge ${trunk.status}`}>
-                        <span className="status-icon">{getStatusIcon(trunk.status)}</span>
-                        {getStatusText(trunk.status)}
-                      </span>
-                    </td>
-                    <td className="trunk-latency">
-                      {trunk.latency ? `${trunk.latency}ms` : '—'}
-                    </td>
-                    <td className="trunk-time">{trunk.lastChanged}</td>
+            {loading ? (
+              <div style={{textAlign: 'center', padding: '2rem'}}>Loading...</div>
+            ) : (
+              <table className="trunk-table">
+                <thead>
+                  <tr>
+                    <th>Trunk Name</th>
+                    <th>PBX</th>
+                    <th>Status</th>
+                    <th>Latency</th>
+                    <th>Last Change</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {sortedTrunks.map(trunk => (
+                    <tr 
+                      key={trunk.id} 
+                      className={`trunk-row ${trunk.status}`}
+                      onClick={() => handleTrunkClick(trunk)}
+                    >
+                      <td className="trunk-name">{trunk.name}</td>
+                      <td className="trunk-pbx">{trunk.pbx}</td>
+                      <td className="trunk-status">
+                        <span className={`status-badge ${trunk.status}`}>
+                          <span className="status-icon">{getStatusIcon(trunk.status)}</span>
+                          {getStatusText(trunk.status)}
+                        </span>
+                      </td>
+                      <td className="trunk-latency">
+                        {trunk.latency ? `${trunk.latency}ms` : '—'}
+                      </td>
+                      <td className="trunk-time">{trunk.lastChanged}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
           </div>
         </div>
       </div>
