@@ -26,7 +26,7 @@ function getClient() {
 async function saveTrunkStatus(trunk, statusText) {}
 async function saveIPCheck(pingResult) {}
 
-// â”€â”€ CDR Metrics â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// CDR Metrics
 async function saveTrunkMetrics(metrics) {
   var db = getClient(); if (!db) return;
   try {
@@ -50,7 +50,7 @@ async function saveTrunkMetrics(metrics) {
   }
 }
 
-// â”€â”€ Alert Sent â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// Alert Sent
 async function saveAlert(alert) {
   var db = getClient(); if (!db) return;
   try {
