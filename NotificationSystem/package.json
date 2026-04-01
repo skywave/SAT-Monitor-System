@@ -9,6 +9,7 @@
     "test": "node config/testAlert.js"
   },
   "dependencies": {
+    "@supabase/supabase-js": "^2.99.1",
     "axios": "^1.7.9",
     "dotenv": "^16.4.5",
     "express": "^4.21.2",

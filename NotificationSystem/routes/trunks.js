@@ -18,7 +18,7 @@ router.get('/', async (req, res) => {
   }
 });
 
-// POST /api/trunks/poll  — before /:id to avoid route conflict
+// POST /trunks/poll  — before /:id to avoid route conflict
 router.post('/poll', async (req, res) => {
   try {
     const result = await trunkService.forcePoll();

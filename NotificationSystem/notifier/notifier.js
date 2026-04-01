@@ -2,6 +2,7 @@ const nodemailer  = require('nodemailer');
 const config      = require('../config/config');
 const logger      = require('../config/logger');
 const { buildEmail } = require('./emailTemplates');
+const supabase    = require('../services/supabaseService');
 
 var smtpTransport = null;
 
@@ -25,6 +26,8 @@ class Notifier {
     var severity = alert.severity || 'CRITICAL';
     var emoji    = severity === 'OK' ? 'OK' : severity === 'WARNING' ? 'WARNING' : 'CRITICAL';
     logger.info(emoji + ' Dispatching ' + alert.alertType + ' alert — trunk: ' + alert.trunkName);
+
+    supabase.saveAlert(alert);
 
     var tasks = [];
 

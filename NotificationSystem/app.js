@@ -11,7 +11,7 @@ const app = express();
 const HealthRoutes = require('./routes/health');
 const AlertRoutes  = require('./routes/alerts');
 const TrunkRoutes  = require('./routes/trunks');
-// const NotificationRoutes = require('./routes/notifications');
+const NotificationRoutes = require('./routes/notifications');
 
 // ── Middleware ────────────────────────────────────────────────────────────────
 app.use(express.json());
@@ -26,7 +26,7 @@ app.use((req, _res, next) => {
 app.use('/health', HealthRoutes);
 app.use('/alerts', AlertRoutes);
 app.use('/trunks', TrunkRoutes);
-// app.use('/NotificationRoutes', NotificationRoutes);
+app.use('/notifications', NotificationRoutes);  
 
 
 // ── 404 ───────────────────────────────────────────────────────────────────────

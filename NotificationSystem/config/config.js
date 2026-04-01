@@ -36,7 +36,7 @@ module.exports = {
   // ── Email recipients ───────────────────────────────────────────────────────
   email: {
     enabled:    false,
-    recipients: (process.env.EMAIL_RECIPIENTS || 'intern.tech3@skywavetech.co.zm').split(',').map(function(e) { return e.trim(); }),
+    recipients: (process.env.EMAIL_RECIPIENTS || 'intern.tech35@skywavetech.co.zm').split(',').map(function(e) { return e.trim(); }),
     // recipients: (process.env.EMAIL_RECIPIENTS || 'intern.tech2@skywavetech.co.zm').split(',').map(function(e) { return e.trim(); }),
     // recipients: (process.env.EMAIL_RECIPIENTS || 'intern.tech@skywavetech.co.zm').split(',').map(function(e) { return e.trim(); }),
   },
@@ -60,15 +60,15 @@ module.exports = {
     authHeader: '',
   },
 
-  // // ── Thresholds ─────────────────────────────────────────────────────────────
-  // thresholds: {
-  //   latency:         { min: 0, max: parseInt(process.env.LATENCY_MAX)          || 150   },
-  //   bandwidth:       { min: 0, max: parseInt(process.env.BANDWIDTH_MAX)        || 10000 },
-  //   concurrentCalls: { min: 0, max: parseInt(process.env.CONCURRENT_CALLS_MAX) || 50    },
-  //   failedCalls:     { max: parseInt(process.env.FAILED_CALLS_MAX) || 5  },
-  //   noAnswerCalls:   { max: parseInt(process.env.NO_ANSWER_MAX)    || 10 },
-  //   rejectedCalls:   { max: parseInt(process.env.REJECTED_MAX)     || 5  },
-  // },
+  // ── Thresholds ─────────────────────────────────────────────────────────────
+  thresholds: {
+    latency:         { min: 0, max: parseInt(process.env.LATENCY_MAX)          || 150   },
+    bandwidth:       { min: 0, max: parseInt(process.env.BANDWIDTH_MAX)        || 10000 },
+    concurrentCalls: { min: 0, max: parseInt(process.env.CONCURRENT_CALLS_MAX) || 150    },
+    failedCalls:     { max: parseInt(process.env.FAILED_CALLS_MAX) || 5  },
+    noAnswerCalls:   { max: parseInt(process.env.NO_ANSWER_MAX)    || 10 },
+    rejectedCalls:   { max: parseInt(process.env.REJECTED_MAX)     || 5  },
+  },
 
   // ── Logging ────────────────────────────────────────────────────────────────
   logging: {

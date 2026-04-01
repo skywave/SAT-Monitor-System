@@ -1,5 +1,3 @@
-
-
 const collectorClient        = require('../config/collectorClient');
 const AlertStateTracker      = require('./alertStateTracker');
 const Notifier               = require('../notifier/notifier');
@@ -7,7 +5,8 @@ const logger                 = require('../config/logger');
 const config                 = require('../config/config');
 const { checkTrunkIPs }      = require('../collectors/pingCollector');
 const { evaluateMetrics, evaluatePing } = require('../services/thresholdService');
-const { getMetricsPerTrunk } = require('../collectors/Trunkmetricscollector');
+const { getMetricsPerTrunk } = require('../collectors/trunkMetricsCollector');
+const supabase               = require('../services/supabaseService');
 
 class alertEngine {
   constructor() {
@@ -72,6 +71,7 @@ class alertEngine {
     if (!trunkId) return;
     logger.debug('Trunk ' + trunkName + ' (' + trunkId + ') status: ' + status);
     var result = this.tracker.evaluate(String(trunkId), status);
+    supabase.saveTrunkStatus(trunk, status);
     if (!result.shouldAlert) return;
     await this.notifier.dispatch({
       trunkId:             String(trunkId),
@@ -97,6 +97,7 @@ class alertEngine {
     logger.debug('IP check: ' + ipResults.size + ' trunk IP(s) checked');
     for (var entry of ipResults) {
       var pingResult = entry[1];
+      supabase.saveIPCheck(pingResult);
       if (!pingResult.reachable) {
         var check = this.tracker.evaluateIP(pingResult.trunkId, false);
         if (!check.shouldAlert) continue;
@@ -130,6 +131,7 @@ class alertEngine {
     logger.debug('Metrics: ' + metricsMap.size + ' trunk(s) with CDR data');
     for (var entry of metricsMap) {
       var metrics  = entry[1];
+      supabase.saveTrunkMetrics(metrics);
       var breaches = evaluateMetrics(metrics);
       for (var i = 0; i < breaches.length; i++) {
         var breach = breaches[i];
