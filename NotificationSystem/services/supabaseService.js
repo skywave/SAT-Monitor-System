@@ -1,6 +1,6 @@
 ﻿/**
  * services/supabaseService.js
- * Writes poll data to Supabase â€” alerts_sent and trunk_metrics only
+ * Writes poll data to Supabase alerts_sent and trunk_metrics only
  */
 
 const { createClient } = require('@supabase/supabase-js');
