@@ -4,7 +4,7 @@ const logger  = require('./logger');
 const cache   = require('./cache');
 const routes  = require('./routes');
 
-const PORT = parseInt(process.env.PORT) || 3000;
+const PORT = 3001
 const app  = express();
 
 app.use(express.json());

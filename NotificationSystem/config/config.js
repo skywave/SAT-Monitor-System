@@ -4,7 +4,7 @@ module.exports = {
 
   // ── Collector ──────────────────────────────────────────────────────────────
   collector: {
-    baseUrl: process.env.COLLECTOR_URL || 'http://localhost:3000',
+    baseUrl: 'http://localhost:3001',
     timeout: 10000,
   },
 

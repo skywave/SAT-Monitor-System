@@ -7,6 +7,8 @@ const express = require('express');
 const logger  = require('./config/logger');
 
 const app = express();
+const cors = require('cors');
+app.use(cors({ origin: '*' }));
 
 const HealthRoutes = require('./routes/health');
 const AlertRoutes  = require('./routes/alerts');
@@ -41,3 +43,4 @@ app.use((err, _req, res, _next) => {
 });
 
 module.exports = app;
+
