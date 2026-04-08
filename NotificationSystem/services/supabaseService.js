@@ -59,7 +59,7 @@ async function saveAlert(alert) {
       trunk_name: alert.trunkName,
       alert_type: alert.alertType,
       severity:   alert.severity   || 'CRITICAL',
-      status:     alert.status     || null,
+status: alert.status || (alert.metric ? alert.label : null),
       message:    alert.message    || (alert.alertType + ' on ' + alert.trunkName),
       sent_at:    new Date().toISOString(),
     });

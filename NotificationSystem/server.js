@@ -4,6 +4,10 @@ const app    = require('./app');
 const engine = require('./alertEngine/alertEngine');
 const logger = require('./config/logger');
 const config = require('./config/config');
+const cors = require('cors');
+
+
+app.use(cors({ origin: '*' }));
 
 const PORT = process.env.PORT || 4000;
 

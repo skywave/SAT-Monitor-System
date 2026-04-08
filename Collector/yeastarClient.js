@@ -6,23 +6,19 @@
 const axios  = require('axios');
 const logger = require('./logger');
 
-const BASE     = process.env.YEASTAR_BASE     || 'https://labs1.ras.yeastar.com';
-const USERNAME = process.env.YEASTAR_USERNAME;
-const PASSWORD = process.env.YEASTAR_PASSWORD;
-
 var accessToken = null;
 var tokenExpiry = null;
 
-var STATUS_CODES = {             // trunk turned off in config
-  1:  'registered',            // OK — the only healthy state
-  2:  'busy',          // not registered
-  3:  'idle and unmonitored',          // registration in progress
-  4:  'registering',                // trying to connect              // registration failed
-  41: 'registration failed',           // host not reachable
-  42: 'Trunk is Unreachable', // wrong username/password
+var STATUS_CODES = {
+  1:  'registered',
+  2:  'busy',
+  3:  'idle and unmonitored',
+  4:  'registering',
+  41: 'registration failed',
+  42: 'Trunk is Unreachable',
   43: 'unavailable',
-  44:  'disabled', 
-  45:  'authentication failed',              // provider unavailable
+  44: 'disabled',
+  45: 'authentication failed',
 };
 
 function decodeStatus(code) {
@@ -33,6 +29,12 @@ async function getToken() {
   if (accessToken && tokenExpiry && Date.now() < tokenExpiry - 30000) {
     return accessToken;
   }
+
+  // Read env vars here — after dotenv.config() has run in server.js
+  var BASE     = process.env.YEASTAR_BASE     || 'https://labs1.ras.yeastar.com';
+  var USERNAME = process.env.YEASTAR_USERNAME;
+  var PASSWORD = process.env.YEASTAR_PASSWORD;
+
   var res = await axios.post(BASE + '/openapi/v1.0/get_token', {
     username: USERNAME,
     password: PASSWORD,
@@ -49,6 +51,7 @@ async function getToken() {
 }
 
 async function apiGet(path, extraParams, timeout) {
+  var BASE   = process.env.YEASTAR_BASE || 'https://labs1.ras.yeastar.com';
   var token  = await getToken();
   var params = Object.assign({ access_token: token }, extraParams || {});
   var res    = await axios.get(BASE + path, { params: params, timeout: timeout || 10000 });
