@@ -59,4 +59,21 @@ export class TrunkMonitoringEntity {
 
   @UpdateDateColumn({ type: 'timestamptz' })
   updated_at: Date;
+
+  // Add these fields to the existing entity
+
+  @Column({ type: 'float', nullable: true })
+  ami_latency_ms: number;  // From AMI SIPshowpeer
+
+  @Column({ type: 'float', nullable: true })
+  ami_jitter_ms: number;   // From AMI SIPshowpeer
+
+  @Column({ type: 'float', nullable: true })
+  ami_packet_loss_pct: number;  // From AMI SIPshowpeer
+
+  @Column({ nullable: true })
+  ami_status: string;  // 'Registered', 'Unreachable'
+
+  @Column({ type: 'timestamptz', nullable: true })
+  ami_last_checked: Date;  // When AMI data was last updated
 }

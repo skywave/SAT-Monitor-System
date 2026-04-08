@@ -8,6 +8,7 @@ import { PBXDataService } from './pbx-data.service';
 import { TrunkMonitoringEntity } from '../persistence/entities/trunk-monitoring.entity';
 import { NetworkMonitoringEntity } from '../persistence/entities/network-monitoring.entity';
 import { BandwidthMonitoringEntity } from '../persistence/entities/bandwidth-monitoring.entity';
+import { AMIService } from '../ami/ami.service';
 
 @Injectable()
 export class MonitoringService implements OnModuleDestroy {
@@ -15,6 +16,7 @@ export class MonitoringService implements OnModuleDestroy {
   private readonly eventTimestamps = new Map<string, number>();
   private startTime = Date.now();
   private syncInterval: NodeJS.Timeout;
+  private amiPollInterval: NodeJS.Timeout;
 
   private extensionsCache: any[] = [];
   private trunksCache: any[] = [];
@@ -25,6 +27,7 @@ export class MonitoringService implements OnModuleDestroy {
     private readonly stateTracker: StateTracker,
     private readonly wsManager: WebSocketManager,
     private readonly pbxDataService: PBXDataService,
+    private readonly amiService: AMIService,
     @InjectRepository(TrunkMonitoringEntity)
     private readonly trunkMonitoringRepo: Repository<TrunkMonitoringEntity>,
     @InjectRepository(NetworkMonitoringEntity)
@@ -35,11 +38,11 @@ export class MonitoringService implements OnModuleDestroy {
     private readonly networkMonitor?: import('../network/network-monitor.service').NetworkMonitorService,
   ) {
     this.startDataSync();
+    this.startAMIPolling();
   }
 
   /**
    * Start data synchronization - Polls PBX every 30 seconds
-   * (Reduced from 5 seconds to reduce load)
    */
   private startDataSync(): void {
     this.syncInterval = setInterval(async () => {
@@ -66,7 +69,105 @@ export class MonitoringService implements OnModuleDestroy {
       } catch (error) {
         this.logger.error(`Data sync error: ${error.message}`);
       }
-    }, 30000); // Changed from 5000 to 30000 (30 seconds)
+    }, 30000);
+  }
+
+  /**
+   * Start AMI polling for real-time latency metrics
+   */
+  private startAMIPolling(): void {
+    // Small delay to ensure PBX data is loaded first
+    setTimeout(async () => {
+      // Configure AMI
+      const amiHost = process.env.AMI_HOST;
+      const amiUsername = process.env.AMI_USERNAME;
+      const amiPassword = process.env.AMI_PASSWORD;
+
+      if (!amiHost || !amiUsername || !amiPassword) {
+        this.logger.warn('⚠️ AMI not configured. Set AMI_HOST, AMI_USERNAME, AMI_PASSWORD in .env');
+        return;
+      }
+
+      const connected = await this.amiService.configure({
+        host: amiHost,
+        port: parseInt(process.env.AMI_PORT || '5038'),
+        username: amiUsername,
+        password: amiPassword,
+        reconnectInterval: 5,
+      });
+
+      if (connected) {
+        this.logger.log('✅ AMI polling started');
+      } else {
+        this.logger.warn('⚠️ AMI polling failed to start - will retry on next cycle');
+      }
+    }, 5000);
+
+    // Poll every 30 seconds for AMI data
+    this.amiPollInterval = setInterval(async () => {
+      try {
+        // Get trunk names from cache
+        const trunkNames = this.trunksCache
+          .map(t => t.name)
+          .filter((name): name is string => Boolean(name));
+        
+        if (trunkNames.length === 0) {
+          this.logger.debug('No trunks available for AMI polling');
+          return;
+        }
+        
+        this.logger.debug(`Polling ${trunkNames.length} trunks via AMI...`);
+        
+        const amiResults = await this.amiService.pollMultipleTrunks(trunkNames);
+        
+        // Update trunk_monitoring table with AMI data
+        for (const amiData of amiResults) {
+          await this.updateTrunkWithAMIData(amiData);
+        }
+        
+        const successCount = amiResults.filter(r => r.latency_ms !== null).length;
+        if (successCount > 0) {
+          this.logger.debug(`📡 AMI: ${successCount}/${amiResults.length} trunks responded with latency data`);
+        }
+        
+      } catch (error) {
+        this.logger.error(`AMI polling error: ${error.message}`);
+      }
+    }, 30000);
+  }
+
+  /**
+   * Update trunk with AMI latency data
+   */
+  private async updateTrunkWithAMIData(amiData: any): Promise<void> {
+    try {
+      // Find the latest trunk record by name
+      const trunk = await this.trunkMonitoringRepo.findOne({
+        where: { trunk_name: amiData.trunk_name },
+        order: { last_checked: 'DESC' },
+      });
+      
+      if (trunk) {
+        trunk.ami_latency_ms = amiData.latency_ms;
+        trunk.ami_jitter_ms = amiData.jitter_ms;
+        trunk.ami_packet_loss_pct = amiData.packet_loss_pct;
+        trunk.ami_status = amiData.status;
+        trunk.ami_last_checked = amiData.timestamp;
+        
+        await this.trunkMonitoringRepo.save(trunk);
+        
+        if (amiData.latency_ms !== null) {
+          this.logger.debug(
+            `📊 AMI Update: ${amiData.trunk_name} → ${amiData.latency_ms}ms (jitter: ${amiData.jitter_ms}ms, loss: ${amiData.packet_loss_pct}%)`
+          );
+        }
+      } else {
+        // Trunk not found in DB yet - create a minimal record
+        this.logger.debug(`Trunk "${amiData.trunk_name}" not found in DB, skipping AMI update`);
+      }
+    } catch (error) {
+      this.logger.error(`Failed to update trunk with AMI data: ${error.message}`);
+    }
   }
 
   /**
@@ -151,6 +252,9 @@ export class MonitoringService implements OnModuleDestroy {
   onModuleDestroy() {
     if (this.syncInterval) {
       clearInterval(this.syncInterval);
+    }
+    if (this.amiPollInterval) {
+      clearInterval(this.amiPollInterval);
     }
   }
 

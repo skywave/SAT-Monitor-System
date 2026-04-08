@@ -1,21 +1,36 @@
+// src/supervisor/supervisor.module.ts
 import { Module } from '@nestjs/common';
+import { TypeOrmModule } from '@nestjs/typeorm';
 import { HttpModule } from '@nestjs/axios';
-import { MonitoringService } from './monitoring.service';
-import { MonitoringController } from './monitoring.controller';
-import { PBXDataService } from './pbx-data.service';
 import { EventsModule } from '../events/events.module';
 import { NetworkModule } from '../network/network.module';
-import { TypeOrmModule } from '@nestjs/typeorm';
-import { TrunkMonitoringEntity } from 'src/persistence/entities/trunk-monitoring.entity';
-import { NetworkMonitoringEntity } from 'src/persistence/entities/network-monitoring.entity';
-import { BandwidthMonitoringEntity } from 'src/persistence/entities/bandwidth-monitoring.entity';
+import { AMIModule } from '../ami/ami.module';  // ← ADD THIS
+import { MonitoringService } from './monitoring.service';
+import { PBXDataService } from './pbx-data.service';
+import { MonitoringController } from './monitoring.controller';
+import { TrunkMonitoringEntity } from '../persistence/entities/trunk-monitoring.entity';
+import { NetworkMonitoringEntity } from '../persistence/entities/network-monitoring.entity';
+import { BandwidthMonitoringEntity } from '../persistence/entities/bandwidth-monitoring.entity';
+import { SupervisorService } from './supervisor.service';
 
 @Module({
-  imports: [EventsModule, HttpModule, NetworkModule, TypeOrmModule.forFeature([TrunkMonitoringEntity, NetworkMonitoringEntity,
-    BandwidthMonitoringEntity
-  ])],
-  providers: [MonitoringService, PBXDataService],
+  imports: [
+    EventsModule,
+    NetworkModule,
+    AMIModule,  // ← ADD THIS
+    HttpModule,
+    TypeOrmModule.forFeature([
+      TrunkMonitoringEntity,
+      NetworkMonitoringEntity,
+      BandwidthMonitoringEntity,
+    ]),
+  ],
   controllers: [MonitoringController],
-  exports: [MonitoringService, PBXDataService],
+  providers: [
+    MonitoringService,
+    PBXDataService,
+    SupervisorService,
+  ],
+  exports: [MonitoringService, PBXDataService, SupervisorService],
 })
 export class SupervisorModule {}
