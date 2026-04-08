@@ -103,7 +103,7 @@ export class PBX {
    */
   async request(endpoint: string, method: 'GET' | 'POST' = 'GET', data?: any): Promise<any> {
     const token = await this.getAccessToken() // Ensure we have a valid token before making the request
-    console.log(`[PBX] Making API request to ${endpoint} with token: ${token}`)
+    console.log(`[PBX] Making API request to ${endpoint}`)
     const response = await this.axiosInstance.request({
       url: endpoint,
       method,
@@ -157,7 +157,6 @@ async getAccessToken(): Promise<string> {
   if (!valid) {
     throw new Error('No valid access token. Authenticate first.')
   }
-  console.log(`[PBX]getAccessToken() returning token: ${this.token}`)
   return this.token!
 }
 

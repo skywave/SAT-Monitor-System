@@ -8,9 +8,12 @@ const supabaseUrl = 'https://mlpfnfbgpraprzuysnge.supabase.co';
 const supabaseKey = 'sb_publishable_F6Hzt-MAkdwuxVMYz4DKtA__FSnDOVM';
 const supabase = createClient(supabaseUrl, supabaseKey);
 
-// Helper functions
+// Helper functions - FIXED: Added 'disabled' to down statuses
 const getStatus = (statusText, latency) => {
-  if (statusText === 'registration_failed' || statusText === 'unreachable' || statusText === 'down') {
+  if (statusText === 'registration_failed' || 
+      statusText === 'unreachable' || 
+      statusText === 'down' ||
+      statusText === 'disabled') {
     return 'down';
   }
   if (latency && latency > 100) {
@@ -36,11 +39,11 @@ const NetworkMonitoring = () => {
   
   const [trunks, setTrunks] = useState([]);
   const [satMonitorReachability, setSatMonitorReachability] = useState({
-    gateway: 'reachable',
-    nas: 'reachable',
-    mno: 'unreachable',
-    customer: 'reachable',
-    google: 'reachable'
+    gateway: 'unknown',
+    nas: 'unknown',
+    mno: 'unknown',
+    customer: 'unknown',
+    google: 'unknown'
   });
   const [satMonitorLatency, setSatMonitorLatency] = useState({
     gateway: 0,
@@ -65,22 +68,22 @@ const NetworkMonitoring = () => {
 
   const fetchTrunks = async () => {
     try {
-      // REMOVED destination_ip since it's no longer in the table
       const { data, error } = await supabase
         .from('trunk_monitoring')
-        .select('trunk_id, trunk_name, status_text, current_latency_ms')
+        .select('trunk_id, trunk_name, status_text, current_latency_ms, last_checked')
         .order('last_checked', { ascending: false });
       
       if (error) throw error;
       
+      // Get unique trunks (latest per trunk_id)
       const trunkMap = new Map();
       data.forEach(trunk => {
         if (!trunkMap.has(trunk.trunk_id)) {
           trunkMap.set(trunk.trunk_id, {
             id: trunk.trunk_id,
             name: trunk.trunk_name,
-            ipAddress: 'N/A', // No longer available
-            status: getStatus(trunk.status_text, trunk.current_latency_ms)
+            status: getStatus(trunk.status_text, trunk.current_latency_ms),
+            latency: trunk.current_latency_ms
           });
         }
       });
@@ -96,40 +99,48 @@ const NetworkMonitoring = () => {
       const { data, error } = await supabase
         .from('network_monitoring')
         .select('device_name, ip_address, reachable, latency_ms')
-        .order('timestamp', { ascending: false })
-        .limit(20);
+        .order('timestamp', { ascending: false });
       
       if (error) throw error;
       
-      const deviceMap = new Map();
+      // Initialize with defaults
+      const reachability = {
+        gateway: 'unknown',
+        nas: 'unknown',
+        mno: 'unknown',
+        customer: 'unknown',
+        google: 'unknown'
+      };
+      const latency = {
+        gateway: 0,
+        nas: 0,
+        customer: 0,
+        google: 0
+      };
+      
+      // Map actual devices from database
       data.forEach(device => {
-        const key = device.device_name.toLowerCase();
-        if (!deviceMap.has(key)) {
-          deviceMap.set(key, device);
-        }
-      });
-      
-      const reachability = {};
-      const latency = {};
-      
-      deviceMap.forEach((device, key) => {
+        const deviceName = device.device_name.toLowerCase();
         const status = device.reachable ? 'reachable' : 'unreachable';
+        const latencyMs = device.latency_ms || 0;
         
-        if (key.includes('gateway') || key.includes('router')) {
-          reachability.gateway = status;
-          latency.gateway = device.latency_ms || 0;
-        } else if (key.includes('nas')) {
-          reachability.nas = status;
-          latency.nas = device.latency_ms || 0;
-        } else if (key.includes('mno')) {
-          reachability.mno = status;
-          latency.mno = device.latency_ms || 0;
-        } else if (key.includes('customer')) {
-          reachability.customer = status;
-          latency.customer = device.latency_ms || 0;
-        } else if (key.includes('google') || key.includes('dns')) {
+        // Map device names to UI labels
+        if (deviceName === 'google-dns' || deviceName === 'google' || deviceName.includes('google')) {
           reachability.google = status;
-          latency.google = device.latency_ms || 0;
+          latency.google = latencyMs;
+        } else if (deviceName === 'pbx-primary' || deviceName.includes('pbx')) {
+          // PBX is not in the UI, but we can use it for other purposes
+        } else if (deviceName.includes('gateway')) {
+          reachability.gateway = status;
+          latency.gateway = latencyMs;
+        } else if (deviceName.includes('nas')) {
+          reachability.nas = status;
+          latency.nas = latencyMs;
+        } else if (deviceName.includes('mno')) {
+          reachability.mno = status;
+        } else if (deviceName.includes('customer')) {
+          reachability.customer = status;
+          latency.customer = latencyMs;
         }
       });
       
@@ -150,7 +161,14 @@ const NetworkMonitoring = () => {
       
       if (error) throw error;
       
-      const bandwidth = {};
+      const bandwidth = {
+        gateway: 0,
+        nas: 0,
+        mno: 0,
+        customer: 0,
+        google: 0
+      };
+      
       data.forEach(device => {
         const key = device.device_name.toLowerCase();
         const kbps = Math.round((device.bandwidth_out_mbps || 0) * 1000);
@@ -162,7 +180,7 @@ const NetworkMonitoring = () => {
         else if (key.includes('google')) bandwidth.google = kbps;
       });
       
-      setSatMonitorBandwidth(prev => ({ ...prev, ...bandwidth }));
+      setSatMonitorBandwidth(bandwidth);
     } catch (error) {
       console.error('Error fetching bandwidth:', error);
     }
@@ -233,7 +251,7 @@ const NetworkMonitoring = () => {
     navigate('/dashboard');
   };
 
-  if (loading && trunks.length === 0) {
+  if (loading) {
     return (
       <div className="network-monitoring">
         <div style={{textAlign: 'center', padding: '4rem'}}>
@@ -275,7 +293,7 @@ const NetworkMonitoring = () => {
           {trunks.length > 0 ? trunks.map(trunk => (
             <div key={trunk.id} className={`trunk-card ${getStatusColor(trunk.status)}`}>
               <div className="trunk-name">{trunk.name}</div>
-              <div className="trunk-ip">{trunk.ipAddress || 'N/A'}</div>
+              <div className="trunk-ip">N/A</div>
               <div className={`trunk-status-badge ${getStatusColor(trunk.status)}`}>
                 <span className="status-dot">●</span>
                 {trunk.status === 'up' ? 'UP' : trunk.status === 'warning' ? 'WARNING' : 'DOWN'}
@@ -303,7 +321,7 @@ const NetworkMonitoring = () => {
                   <div className="reach-target">{target.toUpperCase()}</div>
                   <div className={`reach-status ${getStatusColor(status)}`}>
                     <span className="status-icon">●</span>
-                    {status === 'reachable' ? 'REACHABLE' : 'UNREACHABLE'}
+                    {status === 'reachable' ? 'REACHABLE' : status === 'unreachable' ? 'UNREACHABLE' : 'NO DATA'}
                   </div>
                 </div>
               ))}
@@ -323,15 +341,35 @@ const NetworkMonitoring = () => {
               <tr><th>Source</th><th>Destination</th><th>Latency</th><th>Quality</th></tr>
             </thead>
             <tbody>
-              <tr><td className="source-cell">SAT Monitor</td><td>Gateway</td><td className="latency-value">{satMonitorLatency.gateway || 0}ms</td><td><span className={`quality-badge ${getLatencyQuality(satMonitorLatency.gateway).toLowerCase()}`}>{getLatencyQuality(satMonitorLatency.gateway)}</span></td></tr>
-              <tr><td className="source-cell">SAT Monitor</td><td>NAS</td><td className="latency-value">{satMonitorLatency.nas || 0}ms</td><td><span className={`quality-badge ${getLatencyQuality(satMonitorLatency.nas).toLowerCase()}`}>{getLatencyQuality(satMonitorLatency.nas)}</span></td></tr>
-              <tr><td className="source-cell">SAT Monitor</td><td>Customer Server</td><td className="latency-value">{satMonitorLatency.customer || 0}ms</td><td><span className={`quality-badge ${getLatencyQuality(satMonitorLatency.customer).toLowerCase()}`}>{getLatencyQuality(satMonitorLatency.customer)}</span></td></tr>
-              <tr><td className="source-cell">SAT Monitor</td><td>Google</td><td className="latency-value">{satMonitorLatency.google || 0}ms</td><td><span className={`quality-badge ${getLatencyQuality(satMonitorLatency.google).toLowerCase()}`}>{getLatencyQuality(satMonitorLatency.google)}</span></td></tr>
+              <tr>
+                <td className="source-cell">SAT Monitor</td>
+                <td>Gateway</td>
+                <td className="latency-value">{satMonitorLatency.gateway > 0 ? `${satMonitorLatency.gateway}ms` : 'N/A'}</td>
+                <td><span className={`quality-badge ${getLatencyQuality(satMonitorLatency.gateway).toLowerCase()}`}>{getLatencyQuality(satMonitorLatency.gateway)}</span></td>
+              </tr>
+              <tr>
+                <td className="source-cell">SAT Monitor</td>
+                <td>NAS</td>
+                <td className="latency-value">{satMonitorLatency.nas > 0 ? `${satMonitorLatency.nas}ms` : 'N/A'}</td>
+                <td><span className={`quality-badge ${getLatencyQuality(satMonitorLatency.nas).toLowerCase()}`}>{getLatencyQuality(satMonitorLatency.nas)}</span></td>
+              </tr>
+              <tr>
+                <td className="source-cell">SAT Monitor</td>
+                <td>Customer Server</td>
+                <td className="latency-value">{satMonitorLatency.customer > 0 ? `${satMonitorLatency.customer}ms` : 'N/A'}</td>
+                <td><span className={`quality-badge ${getLatencyQuality(satMonitorLatency.customer).toLowerCase()}`}>{getLatencyQuality(satMonitorLatency.customer)}</span></td>
+              </tr>
+              <tr>
+                <td className="source-cell">SAT Monitor</td>
+                <td>Google</td>
+                <td className="latency-value">{satMonitorLatency.google > 0 ? `${satMonitorLatency.google}ms` : 'N/A'}</td>
+                <td><span className={`quality-badge ${getLatencyQuality(satMonitorLatency.google).toLowerCase()}`}>{getLatencyQuality(satMonitorLatency.google)}</span></td>
+              </tr>
             </tbody>
           </table>
         </div>
 
-        {/* Link Bandwidth Section - Shows N/A for Phase 1 */}
+        {/* Link Bandwidth Section */}
         <div className="section-title">
           <h2>Link Bandwidth</h2>
           <span className="section-subtitle">Available bandwidth in Kbps</span>
@@ -345,7 +383,9 @@ const NetworkMonitoring = () => {
                 <div key={key} className="bandwidth-card">
                   <div className="bandwidth-target">{key.charAt(0).toUpperCase() + key.slice(1)}</div>
                   <div className="bandwidth-value">{value > 0 ? `${value} Kbps` : 'N/A'}</div>
-                  <div className="bandwidth-bar"><div className="bandwidth-fill" style={{width: value > 0 ? `${Math.min((value / 1024) * 100, 100)}%` : '0%'}}></div></div>
+                  <div className="bandwidth-bar">
+                    <div className="bandwidth-fill" style={{width: value > 0 ? `${Math.min((value / 1024) * 100, 100)}%` : '0%'}}></div>
+                  </div>
                 </div>
               ))}
             </div>
@@ -359,35 +399,58 @@ const NetworkMonitoring = () => {
         </div>
 
         <div className="call-aggregate-grid">
-          <div className="aggregate-card customer"><h4>Customer Facing Side</h4><div className="aggregate-stats">
-            <div className="agg-stat"><span className="agg-label">Active</span><span className="agg-value">{callStats.customerFacing.active}</span></div>
-            <div className="agg-stat"><span className="agg-label">Failed</span><span className="agg-value failed">{callStats.customerFacing.failed}</span></div>
-            <div className="agg-stat"><span className="agg-label">Unanswered</span><span className="agg-value">{callStats.customerFacing.unanswered}</span></div>
-            <div className="agg-stat"><span className="agg-label">Rejected</span><span className="agg-value">{callStats.customerFacing.rejected}</span></div>
-          </div></div>
-          <div className="aggregate-card mno"><h4>MNO Facing Side</h4><div className="aggregate-stats">
-            <div className="agg-stat"><span className="agg-label">Active</span><span className="agg-value">{callStats.mnoFacing.active}</span></div>
-            <div className="agg-stat"><span className="agg-label">Failed</span><span className="agg-value failed">{callStats.mnoFacing.failed}</span></div>
-            <div className="agg-stat"><span className="agg-label">Unanswered</span><span className="agg-value">{callStats.mnoFacing.unanswered}</span></div>
-            <div className="agg-stat"><span className="agg-label">Rejected</span><span className="agg-value">{callStats.mnoFacing.rejected}</span></div>
-          </div></div>
-          <div className="aggregate-card gateway"><h4>Gateway Facing Side</h4><div className="aggregate-stats">
-            <div className="agg-stat"><span className="agg-label">Active</span><span className="agg-value">{callStats.gatewayFacing.active}</span></div>
-            <div className="agg-stat"><span className="agg-label">Failed</span><span className="agg-value failed">{callStats.gatewayFacing.failed}</span></div>
-            <div className="agg-stat"><span className="agg-label">Unanswered</span><span className="agg-value">{callStats.gatewayFacing.unanswered}</span></div>
-            <div className="agg-stat"><span className="agg-label">Rejected</span><span className="agg-value">{callStats.gatewayFacing.rejected}</span></div>
-          </div></div>
+          <div className="aggregate-card customer">
+            <h4>Customer Facing Side</h4>
+            <div className="aggregate-stats">
+              <div className="agg-stat"><span className="agg-label">Active</span><span className="agg-value">{callStats.customerFacing.active}</span></div>
+              <div className="agg-stat"><span className="agg-label">Failed</span><span className="agg-value failed">{callStats.customerFacing.failed}</span></div>
+              <div className="agg-stat"><span className="agg-label">Unanswered</span><span className="agg-value">{callStats.customerFacing.unanswered}</span></div>
+              <div className="agg-stat"><span className="agg-label">Rejected</span><span className="agg-value">{callStats.customerFacing.rejected}</span></div>
+            </div>
+          </div>
+          <div className="aggregate-card mno">
+            <h4>MNO Facing Side</h4>
+            <div className="aggregate-stats">
+              <div className="agg-stat"><span className="agg-label">Active</span><span className="agg-value">{callStats.mnoFacing.active}</span></div>
+              <div className="agg-stat"><span className="agg-label">Failed</span><span className="agg-value failed">{callStats.mnoFacing.failed}</span></div>
+              <div className="agg-stat"><span className="agg-label">Unanswered</span><span className="agg-value">{callStats.mnoFacing.unanswered}</span></div>
+              <div className="agg-stat"><span className="agg-label">Rejected</span><span className="agg-value">{callStats.mnoFacing.rejected}</span></div>
+            </div>
+          </div>
+          <div className="aggregate-card gateway">
+            <h4>Gateway Facing Side</h4>
+            <div className="aggregate-stats">
+              <div className="agg-stat"><span className="agg-label">Active</span><span className="agg-value">{callStats.gatewayFacing.active}</span></div>
+              <div className="agg-stat"><span className="agg-label">Failed</span><span className="agg-value failed">{callStats.gatewayFacing.failed}</span></div>
+              <div className="agg-stat"><span className="agg-label">Unanswered</span><span className="agg-value">{callStats.gatewayFacing.unanswered}</span></div>
+              <div className="agg-stat"><span className="agg-label">Rejected</span><span className="agg-value">{callStats.gatewayFacing.rejected}</span></div>
+            </div>
+          </div>
         </div>
 
         {/* Per-Trunk Stats */}
         <div className="per-trunk-container">
           <h3 className="subsection-title">Per-Trunk Statistics</h3>
           <table className="trunk-stats-table">
-            <thead><tr><th>Trunk Name</th><th>Active Calls</th><th>Failed Calls</th><th>Unanswered Calls</th><th>Rejected Calls</th></tr></thead>
+            <thead>
+              <tr><th>Trunk Name</th><th>Active Calls</th><th>Failed Calls</th><th>Unanswered Calls</th><th>Rejected Calls</th></tr>
+            </thead>
             <tbody>
-              {Object.keys(callStats.trunks).length > 0 ? Object.entries(callStats.trunks).map(([trunkName, stats]) => (
-                <tr key={trunkName}><td className="trunk-name-cell">{trunkName}</td><td className="stat-cell active">{stats.active}</td><td className="stat-cell failed">{stats.failed}</td><td className="stat-cell unanswered">{stats.unanswered}</td><td className="stat-cell rejected">{stats.rejected}</td></tr>
-              )) : <tr><td colSpan="5" style={{textAlign: 'center', padding: '1rem'}}>No per-trunk data available</td></tr>}
+              {Object.keys(callStats.trunks).length > 0 ? 
+                Object.entries(callStats.trunks).map(([trunkName, stats]) => (
+                  <tr key={trunkName}>
+                    <td className="trunk-name-cell">{trunkName}</td>
+                    <td className="stat-cell active">{stats.active}</td>
+                    <td className="stat-cell failed">{stats.failed}</td>
+                    <td className="stat-cell unanswered">{stats.unanswered}</td>
+                    <td className="stat-cell rejected">{stats.rejected}</td>
+                  </tr>
+                )) : (
+                  <tr>
+                    <td colSpan="5" style={{textAlign: 'center', padding: '1rem'}}>No per-trunk data available</td>
+                  </tr>
+                )
+              }
             </tbody>
           </table>
         </div>

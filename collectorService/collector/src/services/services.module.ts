@@ -5,7 +5,7 @@ import { CallAggregatorService } from './call-aggregator.service';
 import { BandwidthEstimatorService } from './bandwidth-estimator.service';
 import { ConfigSeederService } from './config-seeder.service';
 import { CallMonitoringEntity } from '../persistence/entities/call-monitoring.entity';
-import { BandwidthMonitoringEntity } from '../persistence/entities/bandwidth-monitoring.entity';
+// import { BandwidthMonitoringEntity } from '../persistence/entities/bandwidth-monitoring.entity';
 import { SystemConfigurationEntity } from '../persistence/entities/system-configuration.entity';
 import { PbxModule } from '../pbx/pbx.module';
 import { AlertCheckerService } from './alert-checker.service';
@@ -20,7 +20,7 @@ import { NetworkMonitoringEntity } from '../persistence/entities/network-monitor
     PbxModule,
     TypeOrmModule.forFeature([
       CallMonitoringEntity,
-      BandwidthMonitoringEntity,
+//       BandwidthMonitoringEntity,
       SystemConfigurationEntity,
       AlertManagementEntity,
       TrunkMonitoringEntity,
@@ -30,13 +30,13 @@ import { NetworkMonitoringEntity } from '../persistence/entities/network-monitor
   ],
   providers: [
     CallAggregatorService,
-    BandwidthEstimatorService,
+//    BandwidthEstimatorService,
     ConfigSeederService,
     AlertCheckerService,
   ],
   exports: [
     CallAggregatorService,
-    BandwidthEstimatorService,
+//    BandwidthEstimatorService,
     ConfigSeederService,
     AlertCheckerService,
   ],

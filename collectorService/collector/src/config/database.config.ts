@@ -31,7 +31,7 @@ export const databaseConfig: TypeOrmModuleOptions = {
     AlertManagementEntity,
   ],
   synchronize: false,
-  logging: true,
+  logging: false,
 };
 
 if (!process.env.DB_PASS) {
