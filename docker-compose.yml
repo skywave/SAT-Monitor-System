@@ -1,0 +1,109 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: sat-postgres
+    environment:
+      POSTGRES_USER: satmonitor
+      POSTGRES_PASSWORD: ***REMOVED***
+      POSTGRES_DB: sat_monitor
+    ports:
+      - "5434:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - sat-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U satmonitor"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Main Collector (NestJS)
+  main-collector:
+    build: ./collectorService/collector
+    container_name: sat-main-collector
+    ports:
+      - "3000:3000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      NODE_ENV: production
+    volumes:
+      - ./collectorService/collector/.env:/app/.env
+    networks:
+      - sat-network
+    restart: unless-stopped
+
+  # Notification Collector (caches trunk data for notification system)
+  notification-collector:
+    build: ./Collector
+    container_name: sat-notification-collector
+    ports:
+      - "3001:3001"
+    environment:
+      NODE_ENV: production
+    volumes:
+      - ./Collector/.env:/app/.env
+    networks:
+      - sat-network
+    restart: unless-stopped
+
+  # Notification System (sends alerts)
+  notifications:
+    build: ./NotificationSystem
+    container_name: sat-notifications
+    ports:
+      - "4000:4000"
+    depends_on:
+      - notification-collector
+    environment:
+      NODE_ENV: production
+      COLLECTOR_URL: http://sat-notification-collector:3001
+      PORT: 4000
+      POLL_INTERVAL_MS: 30000
+      CONSECUTIVE_FAILURES: 2
+      ALERT_COOLDOWN_MINUTES: 30
+      EMAIL_ENABLED: "true"
+      SMTP_ENABLED: "true"
+      LOG_LEVEL: info
+    volumes:
+      - ./NotificationSystem/.env:/app/.env
+    networks:
+      - sat-network
+    restart: unless-stopped
+
+  # Frontend Builder
+  frontend-builder:
+    build: ./FRONT/login-signup/login-signup
+    command: ["/bin/sh", "-c", "echo 'Build complete'"]
+    volumes:
+      - frontend_build:/build
+    networks:
+      - sat-network
+
+  # Nginx
+  nginx:
+    build: ./nginx
+    container_name: sat-nginx
+    ports:
+      - "8081:80"
+    depends_on:
+      - main-collector
+      - frontend-builder
+    volumes:
+      - frontend_build:/usr/share/nginx/html:ro
+    networks:
+      - sat-network
+    restart: unless-stopped
+
+networks:
+  sat-network:
+    driver: bridge
+
+volumes:
+  postgres_data:
+  frontend_build:

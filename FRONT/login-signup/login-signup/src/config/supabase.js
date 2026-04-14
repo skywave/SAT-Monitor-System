@@ -1,19 +1,42 @@
-// src/config/supabase.js
-import { createClient } from '@supabase/supabase-js'
+// src/config/supabaseApi.js
+const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3000/api';
 
-const supabaseUrl = 'https://mlpfnfbgpraprzuysnge.supabase.co'
-const supabaseKey = 'sb_publishable_F6Hzt-MAkdwuxVMYz4DKtA__FSnDOVM'
+class APIClient {
+  constructor(baseURL) {
+    this.baseURL = baseURL;
+  }
 
-// Create client with explicit headers
-export const supabase = createClient(supabaseUrl, supabaseKey, {
-  auth: {
-    persistSession: true,
-    autoRefreshToken: true,
-  },
-  global: {
-    headers: {
-      'apikey': supabaseKey,
-      'Authorization': `Bearer ${supabaseKey}`,
-    },
-  },
-})
+  async request(endpoint, options = {}) {
+    const response = await fetch(`${this.baseURL}${endpoint}`, {
+      ...options,
+      headers: {
+        'Content-Type': 'application/json',
+        ...options.headers,
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error(`API Error: ${response.status}`);
+    }
+
+    return response.json();
+  }
+
+  async getTrunks() {
+    return this.request('/trunks');
+  }
+
+  async getNetworkStatus() {
+    return this.request('/network/status');
+  }
+
+  async getCallStats() {
+    return this.request('/calls/stats');
+  }
+
+  async getAlerts() {
+    return this.request('/alerts');
+  }
+}
+
+export const api = new APIClient(API_URL);

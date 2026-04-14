@@ -2,26 +2,19 @@ require('dotenv').config();
 
 module.exports = {
 
-  // ── Collector ──────────────────────────────────────────────────────────────
   collector: {
-    baseUrl: 'http://localhost:3001',
+    baseUrl: process.env.COLLECTOR_URL || 'http://sat-notification-collector:3001',
     timeout: 10000,
   },
 
-  // ── Polling ────────────────────────────────────────────────────────────────
   polling: {
     intervalMs: parseInt(process.env.POLL_INTERVAL_MS) || 30000,
   },
 
-  // ── Alert Rules ────────────────────────────────────────────────────────────
   alerts: {
     consecutiveFailuresBeforeAlert: parseInt(process.env.CONSECUTIVE_FAILURES)   || 2,
     cooldownMinutes:                parseInt(process.env.ALERT_COOLDOWN_MINUTES) || 30,
-
-    // Only 'registered' is healthy — everything else triggers an alert
     healthyStatuses: ['registered', "registering"],
-
-    // All non-healthy states that should fire an alert
     problemStatuses: [
       'unregistered',
       'disabled',
@@ -33,15 +26,11 @@ module.exports = {
     ],
   },
 
-  // ── Email recipients ───────────────────────────────────────────────────────
   email: {
-    enabled:    false,
-    recipients: (process.env.EMAIL_RECIPIENTS || 'intern.tech35@skywavetech.co.zm').split(',').map(function(e) { return e.trim(); }),
-    // recipients: (process.env.EMAIL_RECIPIENTS || 'intern.tech2@skywavetech.co.zm').split(',').map(function(e) { return e.trim(); }),
-    // recipients: (process.env.EMAIL_RECIPIENTS || 'intern.tech@skywavetech.co.zm').split(',').map(function(e) { return e.trim(); }),
+    enabled:    process.env.EMAIL_ENABLED === 'true',
+    recipients: (process.env.EMAIL_RECIPIENTS || '***REMOVED***@skywavetech.co.zm').split(',').map(function(e) { return e.trim(); }),
   },
 
-  // ── SMTP ───────────────────────────────────────────────────────────────────
   smtp: {
     enabled: process.env.SMTP_ENABLED === 'true',
     host:    process.env.SMTP_HOST || 'smtp.gmail.com',
@@ -52,7 +41,6 @@ module.exports = {
     from:    process.env.SMTP_FROM || '',
   },
 
-  // ── Webhook (disabled) ─────────────────────────────────────────────────────
   webhook: {
     enabled:    false,
     url:        '',
@@ -60,7 +48,6 @@ module.exports = {
     authHeader: '',
   },
 
-  // ── Thresholds ─────────────────────────────────────────────────────────────
   thresholds: {
     latency:         { min: 0, max: parseInt(process.env.LATENCY_MAX)          || 150   },
     bandwidth:       { min: 0, max: parseInt(process.env.BANDWIDTH_MAX)        || 10000 },
@@ -70,7 +57,6 @@ module.exports = {
     rejectedCalls:   { max: parseInt(process.env.REJECTED_MAX)     || 5  },
   },
 
-  // ── Logging ────────────────────────────────────────────────────────────────
   logging: {
     level: process.env.LOG_LEVEL || 'info',
     file:  process.env.LOG_FILE  || './logs/notifications.log',

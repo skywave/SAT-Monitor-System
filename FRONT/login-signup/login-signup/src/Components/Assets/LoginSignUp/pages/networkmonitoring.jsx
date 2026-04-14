@@ -1,14 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { createClient } from '@supabase/supabase-js';
+import { api } from '../../../config/api';
 import './networkmonitoring.css';
 
-// Initialize Supabase
-const supabaseUrl = 'https://mlpfnfbgpraprzuysnge.supabase.co';
-const supabaseKey = 'sb_publishable_F6Hzt-MAkdwuxVMYz4DKtA__FSnDOVM';
-const supabase = createClient(supabaseUrl, supabaseKey);
-
-// Helper functions - FIXED: Added 'disabled' to down statuses
+// Helper functions
 const getStatus = (statusText, latency) => {
   if (statusText === 'registration_failed' || 
       statusText === 'unreachable' || 
@@ -68,14 +63,7 @@ const NetworkMonitoring = () => {
 
   const fetchTrunks = async () => {
     try {
-      const { data, error } = await supabase
-        .from('trunk_monitoring')
-        .select('trunk_id, trunk_name, status_text, current_latency_ms, last_checked')
-        .order('last_checked', { ascending: false });
-      
-      if (error) throw error;
-      
-      // Get unique trunks (latest per trunk_id)
+      const data = await api.getTrunks();
       const trunkMap = new Map();
       data.forEach(trunk => {
         if (!trunkMap.has(trunk.trunk_id)) {
@@ -87,7 +75,6 @@ const NetworkMonitoring = () => {
           });
         }
       });
-      
       setTrunks(Array.from(trunkMap.values()));
     } catch (error) {
       console.error('Error fetching trunks:', error);
@@ -96,135 +83,36 @@ const NetworkMonitoring = () => {
 
   const fetchNetworkData = async () => {
     try {
-      const { data, error } = await supabase
-        .from('network_monitoring')
-        .select('device_name, ip_address, reachable, latency_ms')
-        .order('timestamp', { ascending: false });
-      
-      if (error) throw error;
-      
-      // Initialize with defaults
+      const data = await api.getNetworkStatus();
       const reachability = {
-        gateway: 'unknown',
-        nas: 'unknown',
-        mno: 'unknown',
-        customer: 'unknown',
-        google: 'unknown'
+        gateway: data.gateway_reachable ? 'reachable' : 'unreachable',
+        nas: data.nas_reachable ? 'reachable' : 'unreachable',
+        mno: data.mno_reachable ? 'reachable' : 'unreachable',
+        customer: data.customer_reachable ? 'reachable' : 'unreachable',
+        google: data.google_reachable ? 'reachable' : 'unreachable'
       };
       const latency = {
-        gateway: 0,
-        nas: 0,
-        customer: 0,
-        google: 0
+        gateway: data.gateway_latency || 0,
+        nas: data.nas_latency || 0,
+        customer: data.customer_latency || 0,
+        google: data.google_latency || 0
       };
-      
-      // Map actual devices from database
-      data.forEach(device => {
-        const deviceName = device.device_name.toLowerCase();
-        const status = device.reachable ? 'reachable' : 'unreachable';
-        const latencyMs = device.latency_ms || 0;
-        
-        // Map device names to UI labels
-        if (deviceName === 'google-dns' || deviceName === 'google' || deviceName.includes('google')) {
-          reachability.google = status;
-          latency.google = latencyMs;
-        } else if (deviceName === 'pbx-primary' || deviceName.includes('pbx')) {
-          // PBX is not in the UI, but we can use it for other purposes
-        } else if (deviceName.includes('gateway')) {
-          reachability.gateway = status;
-          latency.gateway = latencyMs;
-        } else if (deviceName.includes('nas')) {
-          reachability.nas = status;
-          latency.nas = latencyMs;
-        } else if (deviceName.includes('mno')) {
-          reachability.mno = status;
-        } else if (deviceName.includes('customer')) {
-          reachability.customer = status;
-          latency.customer = latencyMs;
-        }
-      });
-      
-      setSatMonitorReachability(prev => ({ ...prev, ...reachability }));
-      setSatMonitorLatency(prev => ({ ...prev, ...latency }));
+      setSatMonitorReachability(reachability);
+      setSatMonitorLatency(latency);
     } catch (error) {
       console.error('Error fetching network data:', error);
     }
   };
 
-  const fetchBandwidth = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('bandwidth_monitoring')
-        .select('device_name, bandwidth_out_mbps')
-        .order('timestamp', { ascending: false })
-        .limit(10);
-      
-      if (error) throw error;
-      
-      const bandwidth = {
-        gateway: 0,
-        nas: 0,
-        mno: 0,
-        customer: 0,
-        google: 0
-      };
-      
-      data.forEach(device => {
-        const key = device.device_name.toLowerCase();
-        const kbps = Math.round((device.bandwidth_out_mbps || 0) * 1000);
-        
-        if (key.includes('gateway')) bandwidth.gateway = kbps;
-        else if (key.includes('nas')) bandwidth.nas = kbps;
-        else if (key.includes('mno')) bandwidth.mno = kbps;
-        else if (key.includes('customer')) bandwidth.customer = kbps;
-        else if (key.includes('google')) bandwidth.google = kbps;
-      });
-      
-      setSatMonitorBandwidth(bandwidth);
-    } catch (error) {
-      console.error('Error fetching bandwidth:', error);
-    }
-  };
-
   const fetchCallStats = async () => {
     try {
-      const { data, error } = await supabase
-        .from('call_monitoring')
-        .select('trunk_id, active_calls, total_calls, failed_calls, no_answer_calls, rejected_calls')
-        .eq('period_type', 'minute')
-        .order('period_start', { ascending: false })
-        .limit(10);
-      
-      if (error) throw error;
-      
-      if (data && data.length > 0) {
-        const aggregated = data.reduce((acc, row) => {
-          acc.active += row.active_calls || 0;
-          acc.failed += row.failed_calls || 0;
-          acc.unanswered += row.no_answer_calls || 0;
-          acc.rejected += row.rejected_calls || 0;
-          return acc;
-        }, { active: 0, failed: 0, unanswered: 0, rejected: 0 });
-        
-        const perTrunk = {};
-        data.forEach(row => {
-          if (row.trunk_id && !perTrunk[row.trunk_id]) {
-            perTrunk[row.trunk_id] = {
-              active: row.active_calls || 0,
-              failed: row.failed_calls || 0,
-              unanswered: row.no_answer_calls || 0,
-              rejected: row.rejected_calls || 0
-            };
-          }
-        });
-        
-        setCallStats({
-          trunks: perTrunk,
-          customerFacing: aggregated,
-          mnoFacing: aggregated,
-          gatewayFacing: { active: aggregated.active, failed: 0, unanswered: 0, rejected: 0 }
-        });
-      }
+      const data = await api.getCallStats();
+      setCallStats({
+        trunks: data.trunks || {},
+        customerFacing: data.customerFacing || { active: 0, failed: 0, unanswered: 0, rejected: 0 },
+        mnoFacing: data.mnoFacing || { active: 0, failed: 0, unanswered: 0, rejected: 0 },
+        gatewayFacing: data.gatewayFacing || { active: 0, failed: 0, unanswered: 0, rejected: 0 }
+      });
     } catch (error) {
       console.error('Error fetching call stats:', error);
     }
@@ -236,7 +124,6 @@ const NetworkMonitoring = () => {
       await Promise.all([
         fetchTrunks(),
         fetchNetworkData(),
-        fetchBandwidth(),
         fetchCallStats()
       ]);
       setLoading(false);
@@ -446,9 +333,7 @@ const NetworkMonitoring = () => {
                     <td className="stat-cell rejected">{stats.rejected}</td>
                   </tr>
                 )) : (
-                  <tr>
-                    <td colSpan="5" style={{textAlign: 'center', padding: '1rem'}}>No per-trunk data available</td>
-                  </tr>
+                  <tr><td colSpan="5" style={{textAlign: 'center', padding: '1rem'}}>No per-trunk data available</td></tr>
                 )
               }
             </tbody>

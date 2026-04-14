@@ -11,12 +11,18 @@ import { AlertManagementEntity } from '../persistence/entities/alert-management.
 
 dotenv.config();
 
+// Better error handling with specific error messages
+if (!process.env.DB_HOST) throw new Error("CRITICAL: DB_HOST is missing in .env!");
+if (!process.env.DB_USER) throw new Error("CRITICAL: DB_USER is missing in .env!");
+if (!process.env.DB_PASS) throw new Error("CRITICAL: DB_PASS is missing in .env!");
+if (!process.env.DB_NAME) throw new Error("CRITICAL: DB_NAME is missing in .env!");
+
 export const databaseConfig: TypeOrmModuleOptions = {
   type: 'postgres',
   host: process.env.DB_HOST,
-  port: parseInt(process.env.DB_PORT || '5432', 10) || 5432,
+  port: parseInt(process.env.DB_PORT || '5432', 10),
   username: process.env.DB_USER,
-  password: String(process.env.DB_PASS || ''),
+  password: String(process.env.DB_PASS),
   database: process.env.DB_NAME,
   ssl: { 
     rejectUnauthorized: false // Required for Supabase connections
@@ -33,7 +39,3 @@ export const databaseConfig: TypeOrmModuleOptions = {
   synchronize: false,
   logging: false,
 };
-
-if (!process.env.DB_PASS) {
-  throw new Error("CRITICAL: .env file not found or DB_PASS is missing!");
-}
