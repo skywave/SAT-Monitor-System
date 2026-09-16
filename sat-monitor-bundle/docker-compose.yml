@@ -38,20 +38,6 @@ services:
       - sat-network
     restart: unless-stopped
 
-  # Notification Collector (caches trunk data for notification system)
-  notification-collector:
-    build: ./Collector
-    container_name: sat-notification-collector
-    ports:
-      - "3001:3001"
-    environment:
-      NODE_ENV: production
-    volumes:
-      - ./Collector/.env:/app/.env
-    networks:
-      - sat-network
-    restart: unless-stopped
-
   # Notification System (sends alerts)
   notifications:
     build: ./NotificationSystem
@@ -59,10 +45,10 @@ services:
     ports:
       - "4000:4000"
     depends_on:
-      - notification-collector
+      - main-collector
     environment:
       NODE_ENV: production
-      COLLECTOR_URL: http://sat-notification-collector:3001
+      COLLECTOR_URL: http://sat-main-collector:3000
       PORT: 4000
       POLL_INTERVAL_MS: 30000
       CONSECUTIVE_FAILURES: 2

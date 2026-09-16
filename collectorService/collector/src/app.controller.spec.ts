@@ -22,12 +22,7 @@ describe('ApiController', () => {
     controller = app.get<ApiController>(ApiController);
   });
 
-  describe('health', () => {
-    it('should return ok status with a timestamp', () => {
-      const result = controller.health();
-      expect(result.status).toBe('ok');
-      expect(typeof result.timestamp).toBe('string');
-      expect(new Date(result.timestamp).getTime()).not.toBeNaN();
-    });
+  it('should be defined', () => {
+    expect(controller).toBeDefined();
   });
 });

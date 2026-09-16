@@ -45,11 +45,6 @@ export class RecordingCdrController {
   }
 
   // CDR
-  @Get('cdr/list')
-  async cdrList() {
-    return this.request('cdr/list');
-  }
-
   @Post('cdr/search')
   async cdrSearch(@Body() body: any) {
     return this.request('cdr/search', 'POST', body);

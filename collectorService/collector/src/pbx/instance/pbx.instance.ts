@@ -123,7 +123,7 @@ export class PBXInstance {
   /**
    * Make API request (delegates to client)
    */
-  async request(endpoint: string, method: 'GET' | 'POST' = 'GET', data?: any): Promise<any> {
+  async request(endpoint: string, method: 'GET' | 'POST' = 'GET', data?: any, params?: any): Promise<any> {
     if (!this.isReady()) {
       throw new Error(`PBX ${this.id} not ready`)
     }
@@ -134,7 +134,7 @@ export class PBXInstance {
       throw new Error(`PBX ${this.id} has invalid token`)
     }
 
-    return this.apiClient.request(endpoint, method, data)
+    return this.apiClient.request(endpoint, method, data, params)
   }
 
   /**

@@ -14,11 +14,13 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { databaseConfig } from './config/database.config';
 import { ServicesModule } from './services/services.module';
 import { ScheduleModule } from '@nestjs/schedule';
+import { SnapshotModule } from './snapshot/snapshot.module';
 
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
     PbxModule,
+    SnapshotModule,
     ScheduleModule.forRoot(),
     PersistenceModule,
     TransportModule,

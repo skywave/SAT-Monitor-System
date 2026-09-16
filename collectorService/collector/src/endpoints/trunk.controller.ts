@@ -12,11 +12,6 @@ export class TrunkController {
     return instance.request(endpoint, method, data);
   }
 
-  @Get('list')
-  async list() {
-    return this.request('trunk/list');
-  }
-
   @Post('search')
   async search(@Body() body: { name?: string; type?: string }) {
     return this.request('trunk/search', 'POST', body);

@@ -12,11 +12,6 @@ export class SystemController {
     return instance.request(endpoint, method, data);
   }
 
-  @Get('information')
-  async information() {
-    return this.request('system/information');
-  }
-
   @Get('capacity')
   async capacity() {
     return this.request('system/capacity');

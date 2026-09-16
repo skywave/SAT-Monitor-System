@@ -3,7 +3,7 @@ require('dotenv').config();
 module.exports = {
 
   collector: {
-    baseUrl: process.env.COLLECTOR_URL || 'http://sat-notification-collector:3001',
+    baseUrl: process.env.COLLECTOR_URL || 'http://localhost:3000',
     timeout: 10000,
   },
 

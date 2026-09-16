@@ -9,15 +9,6 @@ import { PBXManager } from './pbx/pbx.manager';
 export class ApiController {
   constructor(private readonly pbxManager: PBXManager) {}
 
-  /** Health check endpoint */
-  @Get('health')
-  health() {
-    return {
-      status: 'ok',
-      timestamp: new Date().toISOString(),
-    };
-  }
-
   /**
    * Helper function to get PBX instance.
    * Ensures all requests have a valid PBX instance.

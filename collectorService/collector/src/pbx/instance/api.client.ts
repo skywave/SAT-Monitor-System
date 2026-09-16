@@ -100,14 +100,16 @@ export class PBX {
    * @param endpoint API endpoint like 'extension/list'
    * @param method HTTP method
    * @param data POST payload
+   * @param params Optional query-string parameters
    */
-  async request(endpoint: string, method: 'GET' | 'POST' = 'GET', data?: any): Promise<any> {
+  async request(endpoint: string, method: 'GET' | 'POST' = 'GET', data?: any, params?: any): Promise<any> {
     const token = await this.getAccessToken() // Ensure we have a valid token before making the request
     console.log(`[PBX] Making API request to ${endpoint}`)
     const response = await this.axiosInstance.request({
       url: endpoint,
       method,
       data,
+      params,
     })
 
     return response.data
