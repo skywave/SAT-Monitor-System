@@ -1,4 +1,11 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, Index } from 'typeorm';
+import {
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  CreateDateColumn,
+  UpdateDateColumn,
+  Index,
+} from 'typeorm';
 
 @Entity('event')
 @Index(['event_type', 'timestamp'])
@@ -10,11 +17,11 @@ export class EventEntity {
   id: string;
 
   @Column({ nullable: true })
-  pbx_id: string;  // Which PBX
+  pbx_id: string; // Which PBX
 
   @Column()
-  event_type: string;  
-  // 'trunk_drop', 'trunk_up', 'trunk_unreachable', 
+  event_type: string;
+  // 'trunk_drop', 'trunk_up', 'trunk_unreachable',
   // 'ip_unreachable', 'ip_recovered',
   // 'latency_high', 'latency_normal',
   // 'bandwidth_high', 'bandwidth_low',
@@ -23,25 +30,25 @@ export class EventEntity {
   // 'system_alert', 'config_changed'
 
   @Column()
-  related_entity_type: string;  // 'trunk', 'network_device', 'call', 'system', 'bandwidth'
+  related_entity_type: string; // 'trunk', 'network_device', 'call', 'system', 'bandwidth'
 
-  @Column({ type: 'uuid', nullable: true })
-  related_entity_id: string;  // FK to trunk_monitoring, network_monitoring, etc.
+  @Column({ type: 'varchar', nullable: true })
+  related_entity_id: string; // Trunk name, call id, or other non-UUID resource identifier
 
   @Column({ type: 'text' })
-  description: string;  // Human-readable message
+  description: string; // Human-readable message
 
   @Column()
-  severity: string;  // 'info', 'warning', 'critical'
+  severity: string; // 'info', 'warning', 'critical'
 
   @Column({ nullable: true })
-  triggered_by: string;  // 'system', 'webhook', 'manual', 'threshold_check'
+  triggered_by: string; // 'system', 'webhook', 'manual', 'threshold_check'
 
   @Column({ type: 'uuid', nullable: true })
-  alert_config_id: string;  // Which system_configuration rule triggered this
+  alert_config_id: string; // Which system_configuration rule triggered this
 
   @Column({ type: 'jsonb', nullable: true })
-  event_data: any;  
+  event_data: any;
   // Flexible JSON for event-specific details
   // Examples:
   // { trunk_name: 'SIP-MTN', peer_ip: '41.x.x.x', previous_status: 'up' }
@@ -49,7 +56,7 @@ export class EventEntity {
   // { call_id: 'xxx', from: '1000', to: '+260...', reason: 'busy' }
 
   @Column({ type: 'timestamptz' })
-  timestamp: Date;  // When event occurred
+  timestamp: Date; // When event occurred
 
   @Column({ default: false })
   resolved: boolean;
@@ -58,7 +65,7 @@ export class EventEntity {
   resolved_at: Date;
 
   @Column({ nullable: true })
-  resolved_by: string;  // Technician username/ID
+  resolved_by: string; // Technician username/ID
 
   @Column({ type: 'text', nullable: true })
   resolution_notes: string;
@@ -67,7 +74,7 @@ export class EventEntity {
   notification_sent: boolean;
 
   @Column({ nullable: true })
-  correlation_id: string;  // Group related events (e.g., trunk down → multiple calls failed)
+  correlation_id: string; // Group related events (e.g., trunk down → multiple calls failed)
 
   @CreateDateColumn({ type: 'timestamptz' })
   created_at: Date;

@@ -15,7 +15,7 @@ var STATUS_CODES = {
   3:  'idle and unmonitored',
   4:  'registering',
   41: 'registration failed',
-  42: 'Trunk is Unreachable',
+  42: 'trunk is unreachable',
   43: 'unavailable',
   44: 'disabled',
   45: 'authentication failed',

@@ -145,7 +145,7 @@ function RecipientsTab() {
   const [formError, setFormError]   = useState('');
   const [toast, setToast]           = useState(null);
 
-  useEffect(() => { loadRecipients(); loadTrunks(); }, []);
+  useEffect(() => { loadRecipients(); loadTrunks(); }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   async function loadRecipients() {
     setLoading(true);
@@ -349,7 +349,7 @@ function ThresholdsTab() {
   const [toast, setToast]                 = useState(null);
   const [form, setForm]                   = useState(DEFAULT_FORM);
 
-  useEffect(() => { loadInitial(); }, []);
+  useEffect(() => { loadInitial(); }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   async function loadInitial() {
     setLoading(true);

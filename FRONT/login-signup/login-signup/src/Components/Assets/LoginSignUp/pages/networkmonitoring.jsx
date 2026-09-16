@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { api } from '../../../config/api';
+import { api } from '../../../../config/api';
 import './networkmonitoring.css';
 
 // Helper functions
@@ -46,6 +46,7 @@ const NetworkMonitoring = () => {
     customer: 0,
     google: 0
   });
+  // eslint-disable-next-line no-unused-vars
   const [satMonitorBandwidth, setSatMonitorBandwidth] = useState({
     gateway: 0,
     nas: 0,

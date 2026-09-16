@@ -13,7 +13,7 @@ const Dashboard = () => {
     packetLoss: 0
   });
   const [loading, setLoading] = useState(true);
-  const [unreadNotifications, setUnreadNotifications] = useState(0);
+  const [unreadNotifications] = useState(0);
 
   useEffect(() => {
     const loadData = async () => {
@@ -35,6 +35,7 @@ const Dashboard = () => {
   const totalTrunks = trunks.length;
   const trunksUp = trunks.filter(t => t.status === 'up').length;
   const trunksDown = trunks.filter(t => t.status === 'down').length;
+  // eslint-disable-next-line no-unused-vars
   const trunksWarning = trunks.filter(t => t.status === 'warning').length;
   const avgLatency = networkStatus.avgLatency;
 

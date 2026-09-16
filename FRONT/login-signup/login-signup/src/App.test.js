@@ -1,8 +1,10 @@
 import { render, screen } from '@testing-library/react';
 import App from './App';
 
-test('renders learn react link', () => {
+test('renders without crashing', () => {
   render(<App />);
-  const linkElement = screen.getByText(/learn react/i);
-  expect(linkElement).toBeInTheDocument();
+  // App renders a Router with routes; the default route redirects to /login.
+  // The login page contains the text "SAT Monitor" in its header.
+  const heading = screen.getByText(/SAT Monitor/i);
+  expect(heading).toBeInTheDocument();
 });

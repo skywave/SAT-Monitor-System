@@ -170,7 +170,7 @@ CREATE TABLE event (
   pbx_id VARCHAR,
   event_type VARCHAR NOT NULL,
   related_entity_type VARCHAR NOT NULL,
-  related_entity_id UUID,
+  related_entity_id VARCHAR,
   description TEXT NOT NULL,
   severity VARCHAR NOT NULL,
   triggered_by VARCHAR,

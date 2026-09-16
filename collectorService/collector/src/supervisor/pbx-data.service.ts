@@ -12,7 +12,7 @@ import { AxiosResponse } from 'axios';
 export class PBXDataService {
   private readonly logger = new Logger(PBXDataService.name);
   private readonly pbxHost = process.env.PBX_HOST || 'labs1.ras.yeastar.com';
-  private readonly localBaseUrl = 'http://localhost:3000/api';
+  private readonly localBaseUrl = 'http://localhost:3000';
 
   constructor(private readonly httpService: HttpService) {}
 
@@ -23,7 +23,9 @@ export class PBXDataService {
   async getExtensions(pbxId: string = 'pbx-labs1'): Promise<any[]> {
     try {
       const response = await firstValueFrom(
-        this.httpService.get<{ data: any[] }>(`${this.localBaseUrl}/extension/list`),
+        this.httpService.get<{ data: any[] }>(
+          `${this.localBaseUrl}/api/extension/list`,
+        ),
       );
       return (response as AxiosResponse<{ data: any[] }>).data?.data || [];
     } catch (error) {
@@ -39,7 +41,9 @@ export class PBXDataService {
   async getTrunks(pbxId: string = 'pbx-labs1'): Promise<any[]> {
     try {
       const response = await firstValueFrom(
-        this.httpService.get<{ data: any[] }>(`${this.localBaseUrl}/trunk/list`),
+        this.httpService.get<{ data: any[] }>(
+          `${this.localBaseUrl}/api/trunk/list`,
+        ),
       );
       return (response as AxiosResponse<{ data: any[] }>).data?.data || [];
     } catch (error) {
@@ -55,7 +59,9 @@ export class PBXDataService {
   async getTrunkStatus(pbxId: string = 'pbx-labs1'): Promise<any[]> {
     try {
       const response = await firstValueFrom(
-        this.httpService.get<{ data: any[] }>(`${this.localBaseUrl}/monitor/trunk_status/list`),
+        this.httpService.get<{ data: any[] }>(
+          `${this.localBaseUrl}/api/monitor/trunk_status/list`,
+        ),
       );
       return (response as AxiosResponse<{ data: any[] }>).data?.data || [];
     } catch (error) {
@@ -71,7 +77,9 @@ export class PBXDataService {
   async getExtensionStatus(pbxId: string = 'pbx-labs1'): Promise<any[]> {
     try {
       const response = await firstValueFrom(
-        this.httpService.get<{ data: any[] }>(`${this.localBaseUrl}/monitor/extension_status/list`),
+        this.httpService.get<{ data: any[] }>(
+          `${this.localBaseUrl}/api/monitor/extension_status/list`,
+        ),
       );
       return (response as AxiosResponse<{ data: any[] }>).data?.data || [];
     } catch (error) {
@@ -87,7 +95,9 @@ export class PBXDataService {
   async getCalls(pbxId: string = 'pbx-labs1'): Promise<any[]> {
     try {
       const response = await firstValueFrom(
-        this.httpService.get<{ data: any[] }>(`${this.localBaseUrl}/api/call/query`),
+        this.httpService.get<{ data: any[] }>(
+          `${this.localBaseUrl}/api/call/query`,
+        ),
       );
       return (response as AxiosResponse<{ data: any[] }>).data?.data || [];
     } catch (error) {
@@ -103,7 +113,9 @@ export class PBXDataService {
   async getSystemInfo(pbxId: string = 'pbx-labs1'): Promise<any> {
     try {
       const response = await firstValueFrom(
-        this.httpService.get<{ data: any }>(`${this.localBaseUrl}/system/info`),
+        this.httpService.get<{ data: any }>(
+          `${this.localBaseUrl}/api/system/information`,
+        ),
       );
       return (response as AxiosResponse<{ data: any }>).data?.data || {};
     } catch (error) {

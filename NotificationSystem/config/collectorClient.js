@@ -20,7 +20,7 @@ var STATUS_CODES = {             // trunk turned off in config
   3:  'idle and unmonitored',          // registration in progress
   4:  'registering',                // trying to connect              // registration failed
   41: 'registration failed',           // host not reachable
-  42: 'Trunk is Unreachable', // wrong username/password
+  42: 'trunk is unreachable', // wrong username/password
   43: 'unavailable',
   44:  'disabled', 
   45:  'authentication failed',              // provider unavailable

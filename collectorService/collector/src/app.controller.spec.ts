@@ -1,22 +1,33 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { AppController } from './app.controller';
-import { AppService } from './app.service';
+import { ApiController } from './app.controller';
+import { PBXManager } from './pbx/pbx.manager';
 
-describe('AppController', () => {
-  let appController: AppController;
+describe('ApiController', () => {
+  let controller: ApiController;
 
   beforeEach(async () => {
     const app: TestingModule = await Test.createTestingModule({
-      controllers: [AppController],
-      providers: [AppService],
+      controllers: [ApiController],
+      providers: [
+        {
+          provide: PBXManager,
+          useValue: {
+            getInstance: jest.fn(),
+            getAllInstances: jest.fn().mockReturnValue([]),
+          },
+        },
+      ],
     }).compile();
 
-    appController = app.get<AppController>(AppController);
+    controller = app.get<ApiController>(ApiController);
   });
 
-  describe('root', () => {
-    it('should return "Hello World!"', () => {
-      expect(appController.getHello()).toBe('Hello World!');
+  describe('health', () => {
+    it('should return ok status with a timestamp', () => {
+      const result = controller.health();
+      expect(result.status).toBe('ok');
+      expect(typeof result.timestamp).toBe('string');
+      expect(new Date(result.timestamp).getTime()).not.toBeNaN();
     });
   });
 });
