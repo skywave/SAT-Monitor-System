@@ -1,13 +1,36 @@
 import React, { useState, useEffect } from 'react';
-import './notification.css';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Shield, Settings, Clock, Plus, RefreshCw, X } from 'lucide-react';
 import { notificationApi } from '../../../../services/notificationApi';
 
-// ── Alert History Tab ─────────────────────────────────────────────────────────
+const Badge = ({ children, tone = 'zinc' }) => {
+  const tones = {
+    red: 'bg-red-500/10 text-red-400 border-red-500/20',
+    amber: 'bg-amber-500/10 text-amber-400 border-amber-500/20',
+    green: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20',
+    purple: 'bg-purple-500/10 text-purple-300 border-purple-500/20',
+    zinc: 'bg-zinc-800 text-zinc-400 border-zinc-700',
+  };
+  return <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-widest border ${tones[tone]}`}>{children}</span>;
+};
+
+const Modal = ({ title, onClose, children }) => (
+  <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm" onClick={(e) => e.target === e.currentTarget && onClose()}>
+    <motion.div initial={{ opacity: 0, scale: 0.96 }} animate={{ opacity: 1, scale: 1 }} className="w-full max-w-md bg-[#111] border border-zinc-800 rounded-2xl p-6">
+      <div className="flex items-center justify-between mb-4">
+        <h3 className="text-lg font-bold">{title}</h3>
+        <button onClick={onClose} className="text-zinc-500 hover:text-white"><X className="w-4 h-4" /></button>
+      </div>
+      {children}
+    </motion.div>
+  </div>
+);
+
 function AlertHistory() {
   const [summary, setSummary] = useState(null);
-  const [alerts, setAlerts]   = useState([]);
+  const [alerts, setAlerts] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [error, setError]     = useState('');
+  const [error, setError] = useState('');
 
   useEffect(() => { loadData(); }, []);
 
@@ -22,148 +45,96 @@ function AlertHistory() {
       if (summaryRes.status === 'fulfilled') setSummary(summaryRes.value);
       if (historyRes.status === 'fulfilled') setAlerts(historyRes.value.alerts || []);
       if (summaryRes.status === 'rejected' && historyRes.status === 'rejected') {
-        setError('Could not reach the notifications API — ' + (historyRes.reason?.message || 'check your backend is running'));
+        setError(historyRes.reason?.message || 'Notifications API unreachable');
       }
     } finally {
       setLoading(false);
     }
   }
 
-  function severityClass(s) {
-    if (s === 'CRITICAL') return 'badge-red';
-    if (s === 'WARNING')  return 'badge-orange';
-    if (s === 'OK')       return 'badge-green';
-    return 'badge-grey';
-  }
-
-  function alertTypeLabel(type) {
-    const labels = {
-      problem:             'Trunk Down',
-      recovery:            'Trunk Recovered',
-      ip_unreachable:      'IP Unreachable',
-      ip_recovered:        'IP Recovered',
-      threshold_above_max: 'Threshold Exceeded',
-      threshold_below_min: 'Threshold Below Min',
-    };
-    return labels[type] || type;
-  }
-
-  function statusLabel(alertType, status) {
-    if (status) return status;
-    if (alertType === 'recovery')       return 'Registered';
-    if (alertType === 'ip_recovered')   return 'Reachable';
-    if (alertType === 'ip_unreachable') return 'Unreachable';
-    if (alertType === 'threshold_above_max') return 'Exceeded';
-    if (alertType === 'threshold_below_min') return 'Below Min';
-    if (alertType === 'problem')             return 'Down';
-    return '—';
-  }
-
-  function statusClass(alertType, status) {
-    if (alertType === 'threshold_above_max') return 'badge-orange';
-    if (alertType === 'threshold_below_min') return 'badge-orange';
-    const val = (status || '').toLowerCase();
-    if (val === 'registered' || alertType === 'recovery' || alertType === 'ip_recovered') return 'badge-green';
-    if (val.includes('failed') || val.includes('unreachable') || alertType === 'problem') return 'badge-red';
-    if (val.includes('disabled') || val.includes('unavailable')) return 'badge-orange';
-    return 'badge-grey';
-  }
+  const severityTone = (s) => s === 'CRITICAL' ? 'red' : s === 'WARNING' ? 'amber' : 'green';
 
   return (
-    <div>
+    <div className="space-y-6">
       {summary && (
-        <div className="summary-cards">
-          <div className="summary-card">
-            <div className="summary-card__value">{summary.total ?? '—'}</div>
-            <div className="summary-card__label">Total Alerts</div>
-          </div>
-          <div className="summary-card">
-            <div className="summary-card__value">{summary.last24h ?? '—'}</div>
-            <div className="summary-card__label">Last 24 Hours</div>
-          </div>
-          <div className="summary-card">
-            <div className="summary-card__value">{summary.bySeverity?.CRITICAL ?? 0}</div>
-            <div className="summary-card__label">Critical</div>
-          </div>
-          <div className="summary-card">
-            <div className="summary-card__value">{summary.bySeverity?.WARNING ?? 0}</div>
-            <div className="summary-card__label">Warnings</div>
-          </div>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          {[
+            { label: 'Total Alerts', val: summary.total },
+            { label: 'Last 24h', val: summary.last24h },
+            { label: 'Critical', val: summary.bySeverity?.CRITICAL },
+            { label: 'Warnings', val: summary.bySeverity?.WARNING }
+          ].map((s) => (
+            <div key={s.label} className="bg-zinc-900/50 border border-zinc-800 p-5 rounded-xl">
+              <p className="text-[10px] uppercase text-zinc-500 tracking-widest font-bold">{s.label}</p>
+              <h4 className="text-2xl font-bold mt-1 tabular-nums">{s.val ?? 0}</h4>
+            </div>
+          ))}
         </div>
       )}
 
-      {loading && <div className="state-box">Loading alerts...</div>}
-
-      {!loading && error && (
-        <div className="state-box state-box--error">
-          <div style={{ marginBottom: '0.5rem' }}>⚠ {error}</div>
-          <button className="btn btn-sm btn-secondary" onClick={loadData}>Retry</button>
+      {loading && <p className="text-sm text-zinc-500">Loading alerts...</p>}
+      {error && (
+        <div className="p-4 rounded-xl border border-red-500/20 bg-red-500/5 text-sm text-red-400 flex items-center justify-between">
+          <span>{error}</span>
+          <button onClick={loadData} className="text-xs uppercase tracking-widest">Retry</button>
         </div>
       )}
 
-      {!loading && !error && alerts.length === 0 && (
-        <div className="state-box">
-          No alerts sent yet. Alerts appear here automatically when your backend fires them.
-        </div>
-      )}
-
-      {!loading && !error && alerts.length > 0 && (
-        <table className="data-table">
-          <thead>
+      <div className="overflow-hidden rounded-xl border border-zinc-800 bg-[#0A0A0A]">
+        <table className="w-full text-left text-sm">
+          <thead className="bg-zinc-900/50 border-b border-zinc-800">
             <tr>
-              <th>Time</th><th>Trunk</th><th>Type</th><th>Severity</th><th>Status</th><th>Message</th>
+              {['Time', 'Trunk', 'Type', 'Severity', 'Status'].map((h) => (
+                <th key={h} className="p-4 text-[10px] uppercase text-zinc-500 tracking-widest font-mono">{h}</th>
+              ))}
             </tr>
           </thead>
-          <tbody>
-            {alerts.map(a => (
-              <tr key={a.id}>
-                <td className="td-time">{new Date(a.sent_at).toLocaleString()}</td>
-                <td>{a.trunk_name}</td>
-                <td>{alertTypeLabel(a.alert_type)}</td>
-                <td><span className={`badge ${severityClass(a.severity)}`}>{a.severity}</span></td>
-                <td><span className={`badge ${statusClass(a.alert_type, a.status)}`}>{statusLabel(a.alert_type, a.status)}</span></td>
-                <td className="td-message">{a.message}</td>
+          <tbody className="divide-y divide-zinc-800">
+            {alerts.map((a) => (
+              <tr key={a.id} className="hover:bg-zinc-900/30">
+                <td className="p-4 text-zinc-400 font-mono text-xs">{new Date(a.sent_at).toLocaleString()}</td>
+                <td className="p-4 font-medium">{a.trunk_name}</td>
+                <td className="p-4 text-zinc-400">{a.alert_type}</td>
+                <td className="p-4"><Badge tone={severityTone(a.severity)}>{a.severity}</Badge></td>
+                <td className="p-4 text-zinc-400">{a.status || '—'}</td>
               </tr>
             ))}
+            {!loading && alerts.length === 0 && (
+              <tr><td colSpan="5" className="p-8 text-center text-zinc-500">No alerts recorded</td></tr>
+            )}
           </tbody>
         </table>
-      )}
+      </div>
     </div>
   );
 }
 
-// ── Recipients Tab ────────────────────────────────────────────────────────────
 function RecipientsTab() {
   const [recipients, setRecipients] = useState([]);
-  const [trunks, setTrunks]         = useState([]);
-  const [loading, setLoading]       = useState(false);
-  const [saving, setSaving]         = useState(false);
-  const [showForm, setShowForm]     = useState(false);
-  const [editing, setEditing]       = useState(null);
-  const [deleting, setDeleting]     = useState(null);
-  const [form, setForm]             = useState({ name: '', email: '', trunk_id: 'all', enabled: true });
-  const [formError, setFormError]   = useState('');
-  const [toast, setToast]           = useState(null);
+  const [trunks, setTrunks] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [showForm, setShowForm] = useState(false);
+  const [editing, setEditing] = useState(null);
+  const [form, setForm] = useState({ name: '', email: '', trunk_id: 'all', enabled: true });
+  const [formError, setFormError] = useState('');
+  const [saving, setSaving] = useState(false);
 
-  useEffect(() => { loadRecipients(); loadTrunks(); }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { loadRecipients(); loadTrunks(); }, []);
 
   async function loadRecipients() {
     setLoading(true);
     try {
       const res = await notificationApi.getRecipients();
       setRecipients(res.recipients || []);
-    } catch (err) {
-      showToast(err.message || 'Failed to load recipients', 'error');
-    } finally {
-      setLoading(false);
-    }
+    } catch (e) { console.error(e); }
+    setLoading(false);
   }
 
   async function loadTrunks() {
     try {
       const res = await notificationApi.getTrunks();
       setTrunks(res.trunks || []);
-    } catch {}
+    } catch (e) { console.error(e); }
   }
 
   function openAdd() {
@@ -173,162 +144,92 @@ function RecipientsTab() {
     setShowForm(true);
   }
 
-  function openEdit(r) {
-    setEditing(r);
-    setForm({ name: r.name, email: r.email, trunk_id: r.trunk_id, enabled: r.enabled });
-    setFormError('');
-    setShowForm(true);
-  }
-
-  function closeForm() { setShowForm(false); setEditing(null); setFormError(''); }
-
   async function saveRecipient() {
     if (!form.name || !form.email) { setFormError('Name and email are required'); return; }
     setSaving(true);
     try {
-      if (editing) {
-        await notificationApi.updateRecipient(editing.id, form);
-        showToast('Recipient updated', 'success');
-      } else {
-        await notificationApi.addRecipient(form);
-        showToast('Recipient added', 'success');
-      }
-      closeForm();
+      if (editing) await notificationApi.updateRecipient(editing.id, form);
+      else await notificationApi.addRecipient(form);
+      setShowForm(false);
       loadRecipients();
     } catch (err) {
       setFormError(err.message || 'Failed to save');
-    } finally {
-      setSaving(false);
     }
+    setSaving(false);
   }
 
   async function toggleEnabled(r) {
-    try {
-      await notificationApi.updateRecipient(r.id, { enabled: !r.enabled });
-      showToast(r.enabled ? 'Disabled' : 'Enabled', 'success');
-      loadRecipients();
-    } catch (err) { showToast(err.message || 'Failed to update', 'error'); }
+    await notificationApi.updateRecipient(r.id, { enabled: !r.enabled });
+    loadRecipients();
   }
 
-  async function confirmDelete() {
-    setSaving(true);
-    try {
-      await notificationApi.deleteRecipient(deleting.id);
-      showToast('Recipient removed', 'success');
-      setDeleting(null);
-      loadRecipients();
-    } catch (err) { showToast(err.message || 'Failed to remove', 'error'); }
-    finally { setSaving(false); }
-  }
-
-  function showToast(message, type = 'success') {
-    setToast({ message, type });
-    setTimeout(() => setToast(null), 3000);
+  async function remove(r) {
+    await notificationApi.deleteRecipient(r.id);
+    loadRecipients();
   }
 
   return (
-    <div>
-      <div className="tab-toolbar">
-        <p className="tab-desc">Manage who receives alert emails. Set scope to a specific trunk or all trunks.</p>
-        <button className="btn btn-grey" onClick={openAdd}>+ Add Recipient</button>
+    <div className="space-y-4">
+      <div className="flex items-center justify-between">
+        <p className="text-sm text-zinc-500">Manage who receives alert emails.</p>
+        <button onClick={openAdd} className="flex items-center gap-2 px-3 py-1.5 bg-purple-500/10 text-purple-300 border border-purple-500/20 rounded-lg text-xs font-bold uppercase tracking-widest">
+          <Plus className="w-3 h-3" /> Add
+        </button>
       </div>
 
-      {loading && <div className="state-box">Loading...</div>}
-      {!loading && recipients.length === 0 && (
-        <div className="state-box">No recipients yet. Add one to start receiving alerts.</div>
-      )}
-      {!loading && recipients.length > 0 && (
-        <table className="data-table">
-          <thead>
-            <tr><th>Name</th><th>Email</th><th>Scope</th><th>Status</th><th>Actions</th></tr>
+      <div className="overflow-hidden rounded-xl border border-zinc-800">
+        <table className="w-full text-left text-sm">
+          <thead className="bg-zinc-900/50 border-b border-zinc-800">
+            <tr>
+              {['Name', 'Email', 'Scope', 'Status', 'Actions'].map((h) => (
+                <th key={h} className="p-4 text-[10px] uppercase text-zinc-500 tracking-widest font-mono">{h}</th>
+              ))}
+            </tr>
           </thead>
-          <tbody>
-            {recipients.map(r => (
-              <tr key={r.id} className={!r.enabled ? 'row-disabled' : ''}>
-                <td>{r.name}</td>
-                <td>{r.email}</td>
-                <td>
-                  <span className={`badge ${r.trunk_id === 'all' ? 'badge-blue' : 'badge-grey'}`}>
-                    {r.trunk_id === 'all' ? 'All Trunks' : r.trunk_id}
-                  </span>
-                </td>
-                <td>
-                  <span className={`badge ${r.enabled ? 'badge-green' : 'badge-red'}`}>
-                    {r.enabled ? 'Active' : 'Disabled'}
-                  </span>
-                </td>
-                <td className="action-cell">
-                  <button className="btn btn-sm btn-secondary" onClick={() => openEdit(r)}>Edit</button>
-                  <button className={`btn btn-sm ${r.enabled ? 'btn-warning' : 'btn-success'}`} onClick={() => toggleEnabled(r)}>
-                    {r.enabled ? 'Disable' : 'Enable'}
-                  </button>
-                  <button className="btn btn-sm btn-danger" onClick={() => setDeleting(r)}>Remove</button>
+          <tbody className="divide-y divide-zinc-800">
+            {recipients.map((r) => (
+              <tr key={r.id} className={!r.enabled ? 'opacity-50' : ''}>
+                <td className="p-4 font-medium">{r.name}</td>
+                <td className="p-4 text-zinc-400">{r.email}</td>
+                <td className="p-4"><Badge tone={r.trunk_id === 'all' ? 'purple' : 'zinc'}>{r.trunk_id === 'all' ? 'All Trunks' : r.trunk_id}</Badge></td>
+                <td className="p-4"><Badge tone={r.enabled ? 'green' : 'red'}>{r.enabled ? 'Active' : 'Disabled'}</Badge></td>
+                <td className="p-4 flex gap-2">
+                  <button className="text-xs text-zinc-400 hover:text-white" onClick={() => { setEditing(r); setForm({ name: r.name, email: r.email, trunk_id: r.trunk_id, enabled: r.enabled }); setShowForm(true); }}>Edit</button>
+                  <button className="text-xs text-zinc-400 hover:text-white" onClick={() => toggleEnabled(r)}>{r.enabled ? 'Disable' : 'Enable'}</button>
+                  <button className="text-xs text-red-400 hover:text-red-300" onClick={() => remove(r)}>Remove</button>
                 </td>
               </tr>
             ))}
+            {!loading && recipients.length === 0 && (
+              <tr><td colSpan="5" className="p-8 text-center text-zinc-500">No recipients yet</td></tr>
+            )}
           </tbody>
         </table>
-      )}
+      </div>
 
-      {showForm && (
-        <div className="modal-overlay" onClick={e => e.target.className === 'modal-overlay' && closeForm()}>
-          <div className="modal">
-            <h3>{editing ? 'Edit Recipient' : 'Add Recipient'}</h3>
-            <div className="form-group">
-              <label>Name <span className="required">*</span></label>
-              <input type="text" placeholder="e.g. IT Admin" value={form.name}
-                onChange={e => setForm({ ...form, name: e.target.value })} />
-            </div>
-            <div className="form-group">
-              <label>Email <span className="required">*</span></label>
-              <input type="email" placeholder="admin@company.com" value={form.email}
-                onChange={e => setForm({ ...form, email: e.target.value })} />
-            </div>
-            <div className="form-group">
-              <label>Trunk Scope</label>
-              <select value={form.trunk_id} onChange={e => setForm({ ...form, trunk_id: e.target.value })}>
-                <option value="all">All Trunks — receives every alert</option>
-                {trunks.map(t => <option key={t.trunk_id} value={t.name}>{t.name} only</option>)}
+      <AnimatePresence>
+        {showForm && (
+          <Modal title={editing ? 'Edit Recipient' : 'Add Recipient'} onClose={() => setShowForm(false)}>
+            <div className="space-y-4">
+              <input className="w-full bg-zinc-950 border border-zinc-800 rounded-lg p-3 text-sm" placeholder="Name" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
+              <input className="w-full bg-zinc-950 border border-zinc-800 rounded-lg p-3 text-sm" placeholder="Email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} />
+              <select className="w-full bg-zinc-950 border border-zinc-800 rounded-lg p-3 text-sm" value={form.trunk_id} onChange={(e) => setForm({ ...form, trunk_id: e.target.value })}>
+                <option value="all">All Trunks</option>
+                {trunks.map((t) => <option key={t.trunk_id} value={t.name}>{t.name}</option>)}
               </select>
-              <small className="hint">"All Trunks" means this person gets alerted for any trunk problem.</small>
+              {formError && <p className="text-xs text-red-400">{formError}</p>}
+              <div className="flex justify-end gap-2">
+                <button onClick={() => setShowForm(false)} className="px-3 py-2 text-xs uppercase tracking-widest text-zinc-400">Cancel</button>
+                <button onClick={saveRecipient} disabled={saving} className="px-4 py-2 bg-purple-500 text-white rounded-lg text-xs uppercase tracking-widest">{saving ? 'Saving...' : 'Save'}</button>
+              </div>
             </div>
-            <div className="form-group form-group-inline">
-              <input type="checkbox" id="enabled-chk" checked={form.enabled}
-                onChange={e => setForm({ ...form, enabled: e.target.checked })} />
-              <label htmlFor="enabled-chk">Active</label>
-            </div>
-            {formError && <div className="form-error">{formError}</div>}
-            <div className="modal-actions">
-              <button className="btn btn-secondary" onClick={closeForm}>Cancel</button>
-              <button className="btn btn-primary" disabled={saving} onClick={saveRecipient}>
-                {saving ? 'Saving...' : editing ? 'Save Changes' : 'Add Recipient'}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {deleting && (
-        <div className="modal-overlay" onClick={e => e.target.className === 'modal-overlay' && setDeleting(null)}>
-          <div className="modal modal-sm">
-            <h3>Remove Recipient</h3>
-            <p>Remove <strong>{deleting.name}</strong> ({deleting.email})?</p>
-            <div className="modal-actions">
-              <button className="btn btn-secondary" onClick={() => setDeleting(null)}>Cancel</button>
-              <button className="btn btn-danger" disabled={saving} onClick={confirmDelete}>
-                {saving ? 'Removing...' : 'Remove'}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {toast && <div className={`toast toast-${toast.type}`}>{toast.message}</div>}
+          </Modal>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
 
-// ── Thresholds Tab ────────────────────────────────────────────────────────────
 const DEFAULT_FORM = {
   failed_calls_max: 5, no_answer_max: 10, rejected_max: 5,
   concurrent_calls_max: 50, latency_max: 150, bandwidth_max: 10000,
@@ -336,257 +237,89 @@ const DEFAULT_FORM = {
 };
 
 function ThresholdsTab() {
-  const [trunks, setTrunks]               = useState([]);
+  const [trunks, setTrunks] = useState([]);
   const [selectedTrunk, setSelectedTrunk] = useState('');
-  const [manualTrunk, setManualTrunk]     = useState('');
-  const [trunksError, setTrunksError]     = useState(false);
-  const [currentConfig, setCurrentConfig] = useState(null);
-  const [customConfigs, setCustomConfigs] = useState({});
-  const [saving, setSaving]               = useState(false);
-  const [loading, setLoading]             = useState(false);
-  const [loadingPanel, setLoadingPanel]   = useState(false);
-  const [saveError, setSaveError]         = useState('');
-  const [toast, setToast]                 = useState(null);
-  const [form, setForm]                   = useState(DEFAULT_FORM);
+  const [form, setForm] = useState(DEFAULT_FORM);
+  const [saving, setSaving] = useState(false);
 
-  useEffect(() => { loadInitial(); }, []); // eslint-disable-line react-hooks/exhaustive-deps
-
-  async function loadInitial() {
-    setLoading(true);
-    try {
-      const [trunkRes, thresholdRes] = await Promise.allSettled([
-        notificationApi.getTrunks(),
-        notificationApi.getAllThresholds(),
-      ]);
-
-      if (trunkRes.status === 'fulfilled') {
-        const trunkList = trunkRes.value.trunks || [];
-        setTrunks(trunkList);
-        if (trunkList.length > 0) {
-          setSelectedTrunk(trunkList[0].name);
-          await loadTrunkPanel(trunkList[0].name);
+  useEffect(() => {
+    (async () => {
+      try {
+        const res = await notificationApi.getTrunks();
+        const list = res.trunks || [];
+        setTrunks(list);
+        if (list[0]) {
+          setSelectedTrunk(list[0].name);
+          loadPanel(list[0].name);
         }
-      } else {
-        setTrunksError(true);
-      }
+      } catch (e) { console.error(e); }
+    })();
+  }, []);
 
-      if (thresholdRes.status === 'fulfilled') {
-        const configMap = {};
-        (thresholdRes.value.thresholds || []).forEach(t => { configMap[t.trunk_id] = t; });
-        setCustomConfigs(configMap);
-      }
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  async function loadTrunkPanel(name) {
-    if (!name) return;
-    setLoadingPanel(true);
-    setSaveError('');
+  async function loadPanel(name) {
     try {
       const res = await notificationApi.getTrunkThresholds(name);
-      setCurrentConfig(res);
-      const t = res.thresholds || {};
-      setForm({
-        failed_calls_max:       t.failed_calls_max       ?? 5,
-        no_answer_max:          t.no_answer_max          ?? 10,
-        rejected_max:           t.rejected_max           ?? 5,
-        concurrent_calls_max:   t.concurrent_calls_max   ?? 50,
-        latency_max:            t.latency_max            ?? 150,
-        bandwidth_max:          t.bandwidth_max          ?? 10000,
-        metrics_window_minutes: t.metrics_window_minutes ?? 60,
-        consecutive_failures:   t.consecutive_failures   ?? 2,
-        cooldown_minutes:       t.cooldown_minutes       ?? 30,
-      });
+      setForm({ ...DEFAULT_FORM, ...(res.thresholds || {}) });
     } catch {
-      setCurrentConfig({ isDefault: true, thresholds: DEFAULT_FORM });
       setForm(DEFAULT_FORM);
-    } finally {
-      setLoadingPanel(false);
     }
   }
 
-  async function handleSelectTrunk(name) {
-    setSelectedTrunk(name);
-    await loadTrunkPanel(name);
-  }
-
-  async function handleManualLoad() {
-    const name = manualTrunk.trim();
-    if (!name) return;
-    setSelectedTrunk(name);
-    await loadTrunkPanel(name);
-  }
-
-  async function saveThresholds() {
-    if (!selectedTrunk) { setSaveError('Select or enter a trunk name first'); return; }
-    setSaving(true); setSaveError('');
-    try {
-      await notificationApi.updateTrunkThresholds(selectedTrunk, { trunk_name: selectedTrunk, ...form });
-      setCustomConfigs(prev => ({ ...prev, [selectedTrunk]: true }));
-      setCurrentConfig(prev => ({ ...prev, isDefault: false }));
-      showToast('Thresholds saved for ' + selectedTrunk, 'success');
-    } catch (err) {
-      setSaveError(err.message || 'Failed to save thresholds');
-    } finally {
-      setSaving(false);
-    }
-  }
-
-  async function resetToDefaults() {
+  async function save() {
+    if (!selectedTrunk) return;
     setSaving(true);
     try {
-      await notificationApi.resetTrunkThresholds(selectedTrunk);
-      setCustomConfigs(prev => { const n = { ...prev }; delete n[selectedTrunk]; return n; });
-      setForm(DEFAULT_FORM);
-      setCurrentConfig(prev => ({ ...prev, isDefault: true }));
-      showToast('Reset to defaults', 'success');
-    } catch (err) {
-      showToast(err.message || 'Failed to reset', 'error');
-    } finally {
-      setSaving(false);
-    }
+      await notificationApi.updateTrunkThresholds(selectedTrunk, { trunk_name: selectedTrunk, ...form });
+    } catch (e) { console.error(e); }
+    setSaving(false);
   }
 
-  function showToast(message, type = 'success') {
-    setToast({ message, type });
-    setTimeout(() => setToast(null), 3000);
-  }
-
-  function Field({ label, hint, field, unit }) {
-    return (
-      <div className="setting-item">
-        <label>{label}</label>
-        <small>{hint}</small>
-        <div className="input-row">
-          <input
-            type="number"
-            min="0"
-            value={form[field]}
-            onChange={e => setForm(prev => ({ ...prev, [field]: parseInt(e.target.value) || 0 }))}
-          />
-          <span className="unit">{unit}</span>
-        </div>
-      </div>
-    );
-  }
-
-  if (loading) return <div className="state-box">Loading trunk data...</div>;
+  const fields = [
+    ['failed_calls_max', 'Failed Calls', 'calls'],
+    ['no_answer_max', 'No Answer', 'calls'],
+    ['rejected_max', 'Rejected', 'calls'],
+    ['concurrent_calls_max', 'Concurrent', 'calls'],
+    ['latency_max', 'Latency Max', 'ms'],
+    ['bandwidth_max', 'Bandwidth Max', 'kbps'],
+    ['metrics_window_minutes', 'Window', 'min'],
+    ['consecutive_failures', 'Failures', 'polls'],
+    ['cooldown_minutes', 'Cooldown', 'min'],
+  ];
 
   return (
-    <div>
-      <p className="tab-desc">Set custom alert thresholds per trunk. Trunks without custom settings use system defaults.</p>
-
-      {!trunksError && trunks.length > 0 && (
-        <div className="trunk-tabs">
-          {trunks.map(t => (
-            <button
-              key={t.trunk_id}
-              className={`trunk-tab ${selectedTrunk === t.name ? 'active' : ''}`}
-              onClick={() => handleSelectTrunk(t.name)}
-            >
-              {t.name}
-              {customConfigs[t.name] && <span className="custom-dot"> ●</span>}
-            </button>
-          ))}
-        </div>
-      )}
-
-      {(trunksError || trunks.length === 0) && (
-        <div className="manual-trunk-row">
-          <div className="form-group" style={{ marginBottom: 0, flex: 1 }}>
-            <label>Trunk name</label>
-            <input
-              type="text"
-              placeholder="e.g. SBC-Primary"
-              value={manualTrunk}
-              onChange={e => setManualTrunk(e.target.value)}
-              onKeyDown={e => e.key === 'Enter' && handleManualLoad()}
-            />
-          </div>
-          <button className="btn btn-secondary" style={{ alignSelf: 'flex-end' }} onClick={handleManualLoad}>
-            Load
+    <div className="space-y-4">
+      <div className="flex flex-wrap gap-2">
+        {trunks.map((t) => (
+          <button
+            key={t.trunk_id}
+            onClick={() => { setSelectedTrunk(t.name); loadPanel(t.name); }}
+            className={`px-3 py-1.5 rounded-lg text-xs font-bold uppercase tracking-widest border ${selectedTrunk === t.name ? 'border-purple-500/40 bg-purple-500/10 text-purple-300' : 'border-zinc-800 text-zinc-500'}`}
+          >
+            {t.name}
           </button>
-          {trunksError && (
-            <small className="hint" style={{ width: '100%' }}>
-              Could not load trunk list — enter a trunk name manually to configure its thresholds.
-            </small>
-          )}
-        </div>
-      )}
-
-      {loadingPanel && <div className="state-box" style={{ marginTop: '1rem' }}>Loading thresholds...</div>}
-
-      {!loadingPanel && selectedTrunk && (
-        <div className="settings-panel">
-          <div className="settings-header">
-            <div>
-              <h3>{selectedTrunk}</h3>
-              <span className={`badge ${currentConfig?.isDefault ? 'badge-grey' : 'badge-blue'}`}>
-                {currentConfig?.isDefault ? 'Using system defaults' : 'Custom configuration'}
-              </span>
-            </div>
-            {!currentConfig?.isDefault && (
-              <button className="btn btn-secondary btn-sm" onClick={resetToDefaults} disabled={saving}>
-                Reset to Defaults
-              </button>
-            )}
-          </div>
-
-          <div className="settings-section">
-            <h4>Call Metrics</h4>
-            <div className="settings-grid">
-              <Field label="Failed Calls Max"     hint="Alert when failed calls exceed this"       field="failed_calls_max"     unit="calls" />
-              <Field label="No Answer Max"        hint="Alert when unanswered calls exceed this"   field="no_answer_max"        unit="calls" />
-              <Field label="Rejected Calls Max"   hint="Alert when rejected calls exceed this"     field="rejected_max"         unit="calls" />
-              <Field label="Concurrent Calls Max" hint="Alert when simultaneous calls exceed this" field="concurrent_calls_max" unit="calls" />
+        ))}
+      </div>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        {fields.map(([field, label, unit]) => (
+          <div key={field} className="bg-zinc-900/40 border border-zinc-800 rounded-xl p-4">
+            <label className="text-[10px] uppercase tracking-widest text-zinc-500">{label}</label>
+            <div className="mt-2 flex items-center gap-2">
+              <input type="number" min="0" value={form[field]} onChange={(e) => setForm({ ...form, [field]: parseInt(e.target.value) || 0 })} className="w-full bg-zinc-950 border border-zinc-800 rounded-lg p-2 text-sm font-mono" />
+              <span className="text-xs text-zinc-500">{unit}</span>
             </div>
           </div>
-
-          <div className="settings-section">
-            <h4>Network Metrics</h4>
-            <div className="settings-grid">
-              <Field label="Latency Max"   hint="Alert when average latency exceeds this" field="latency_max"   unit="ms"   />
-              <Field label="Bandwidth Max" hint="Alert when bandwidth exceeds this"       field="bandwidth_max" unit="kbps" />
-            </div>
-          </div>
-
-          <div className="settings-section">
-            <h4>Alert Behaviour</h4>
-            <div className="settings-grid">
-              <Field label="Metrics Window"       hint="How far back to count calls"                  field="metrics_window_minutes" unit="minutes" />
-              <Field label="Consecutive Failures" hint="How many failed polls before alerting"        field="consecutive_failures"   unit="polls"   />
-              <Field label="Cooldown Period"      hint="Minutes between repeat alerts for same issue" field="cooldown_minutes"       unit="minutes" />
-            </div>
-          </div>
-
-          <div className="severity-info">
-            <div className="severity-item severity-warning"><strong>WARNING</strong> — metric exceeds the limit</div>
-            <div className="severity-item severity-critical"><strong>CRITICAL</strong> — metric exceeds 1.5× the limit</div>
-          </div>
-
-          {saveError && <div className="form-error">{saveError}</div>}
-          <div className="form-actions">
-            <button className="btn btn-primary" disabled={saving} onClick={saveThresholds}>
-              {saving ? 'Saving...' : 'Save Thresholds'}
-            </button>
-          </div>
-        </div>
-      )}
-
-      {toast && <div className={`toast toast-${toast.type}`}>{toast.message}</div>}
+        ))}
+      </div>
+      <button onClick={save} disabled={saving || !selectedTrunk} className="px-4 py-2 bg-purple-500 text-white rounded-lg text-xs uppercase tracking-widest font-bold disabled:opacity-50">
+        {saving ? 'Saving...' : 'Save Thresholds'}
+      </button>
     </div>
   );
 }
 
-
-// ── Engine Controls (Toggle + Force Poll) ─────────────────────────────────────
 function EngineToggle() {
-  const [running, setRunning]   = useState(null);
-  const [toggling, setToggling] = useState(false);
-  const [polling, setPolling]   = useState(false);
-  const [pollDone, setPollDone] = useState(false);
+  const [running, setRunning] = useState(null);
+  const [polling, setPolling] = useState(false);
 
   useEffect(() => { loadStatus(); }, []);
 
@@ -594,100 +327,71 @@ function EngineToggle() {
     try {
       const res = await notificationApi.getEngineStatus();
       setRunning(res.running);
-    } catch {
-      setRunning(false);
-    }
+    } catch { setRunning(false); }
   }
 
   async function toggle() {
-    setToggling(true);
     try {
-      if (running) {
-        await notificationApi.stopEngine();
-      } else {
-        await notificationApi.startEngine();
-      }
+      if (running) await notificationApi.stopEngine();
+      else await notificationApi.startEngine();
       await loadStatus();
-    } catch {} finally {
-      setToggling(false);
-    }
+    } catch (e) { console.error(e); }
   }
 
   async function forcePoll() {
     setPolling(true);
-    setPollDone(false);
-    try {
-      await notificationApi.forcePoll();
-      setPollDone(true);
-      setTimeout(() => setPollDone(false), 2000);
-    } catch {} finally {
-      setPolling(false);
-    }
+    try { await notificationApi.forcePoll(); } catch (e) { console.error(e); }
+    setPolling(false);
   }
 
   return (
-    <div className="engine-controls">
-      <div className="engine-toggle">
-        <div className="engine-status">
-          <span className={`engine-dot ${running ? 'engine-dot--on' : 'engine-dot--off'}`} />
-          {running === null ? 'Checking...' : running ? 'Running' : 'Stopped'}
-        </div>
-        <button className="btn btn-sm btn-secondary" onClick={toggle} disabled={toggling || running === null}>
-          {toggling ? '...' : running ? 'Stop' : 'Start'}
-        </button>
-      </div>
-
-      <div className="engine-divider" />
-
-      <button
-        className="btn btn-sm btn-secondary"
-        onClick={forcePoll}
-        disabled={polling}
-        title="Immediately run one full poll cycle — checks trunk status, IP reachability, and CDR metrics right now"
-      >
-        {polling ? 'Polling...' : pollDone ? '✓ Done' : 'Force Poll'}
-      </button>
+    <div className="flex items-center gap-3">
+      <span className={`w-2 h-2 rounded-full ${running ? 'bg-emerald-400' : 'bg-red-400'}`} />
+      <span className="text-xs text-zinc-400 uppercase tracking-widest">{running ? 'Running' : 'Stopped'}</span>
+      <button onClick={toggle} className="text-xs border border-zinc-700 px-3 py-1 rounded-lg hover:bg-zinc-800">{running ? 'Stop' : 'Start'}</button>
+      <button onClick={forcePoll} className="text-xs border border-zinc-700 px-3 py-1 rounded-lg hover:bg-zinc-800">{polling ? 'Polling...' : 'Force Poll'}</button>
     </div>
   );
 }
 
-// ── Main Notifications Page ───────────────────────────────────────────────────
 export default function Notifications() {
   const [activeTab, setActiveTab] = useState('history');
-
   const tabs = [
-    { key: 'history',    label: 'Alert History' },
-    { key: 'recipients', label: 'Recipients'     },
-    { key: 'thresholds', label: 'Thresholds'     },
+    { key: 'history', label: 'Alert History', icon: Clock },
+    { key: 'recipients', label: 'Recipients', icon: Shield },
+    { key: 'thresholds', label: 'Thresholds', icon: Settings },
   ];
 
   return (
-    <div className="notifications-page">
-      <div className="notifications-header">
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
         <div>
-          <h1>Notifications</h1>
-          <p className="page-subtitle">Monitor alerts, manage recipients, and configure thresholds</p>
+          <h1 className="text-2xl font-bold">Notifications</h1>
+          <p className="text-zinc-500 text-sm">Alerts, recipients, and thresholds</p>
         </div>
         <EngineToggle />
       </div>
 
-      <div className="tabs">
-        {tabs.map(tab => (
-          <button
-            key={tab.key}
-            className={`tab-btn ${activeTab === tab.key ? 'tab-btn--active' : ''}`}
-            onClick={() => setActiveTab(tab.key)}
-          >
-            {tab.label}
-          </button>
-        ))}
+      <div className="flex gap-1 border-b border-zinc-800">
+        {tabs.map((tab) => {
+          const Icon = tab.icon;
+          return (
+            <button
+              key={tab.key}
+              className={`px-4 py-2 text-sm font-medium flex items-center gap-2 border-b-2 ${activeTab === tab.key ? 'border-purple-500 text-white' : 'border-transparent text-zinc-500 hover:text-zinc-300'}`}
+              onClick={() => setActiveTab(tab.key)}
+            >
+              <Icon className="w-4 h-4" /> {tab.label}
+            </button>
+          );
+        })}
       </div>
 
-      <div className="tab-content">
-        {activeTab === 'history'    && <AlertHistory />}
+      <motion.div key={activeTab} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}>
+        {activeTab === 'history' && <AlertHistory />}
         {activeTab === 'recipients' && <RecipientsTab />}
         {activeTab === 'thresholds' && <ThresholdsTab />}
-      </div>
+      </motion.div>
     </div>
   );
 }

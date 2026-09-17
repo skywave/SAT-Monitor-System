@@ -1,11 +1,14 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import './dash.css';
+import { motion, AnimatePresence } from 'framer-motion';
+import {
+  Activity,
+  AlertCircle,
+  CheckCircle2,
+  Server
+} from 'lucide-react';
 import { getTrunks, getNetworkStatus } from '../../../../services/monitoringService';
 
 const Dashboard = () => {
-  const navigate = useNavigate();
-  
   const [trunks, setTrunks] = useState([]);
   const [networkStatus, setNetworkStatus] = useState({
     status: 'optimal',
@@ -13,7 +16,6 @@ const Dashboard = () => {
     packetLoss: 0
   });
   const [loading, setLoading] = useState(true);
-  const [unreadNotifications] = useState(0);
 
   useEffect(() => {
     const loadData = async () => {
@@ -35,208 +37,74 @@ const Dashboard = () => {
   const totalTrunks = trunks.length;
   const trunksUp = trunks.filter(t => t.status === 'up').length;
   const trunksDown = trunks.filter(t => t.status === 'down').length;
-  // eslint-disable-next-line no-unused-vars
-  const trunksWarning = trunks.filter(t => t.status === 'warning').length;
-  const avgLatency = networkStatus.avgLatency;
-
-  const getStatusColor = (status) => {
-    if (status === 'up') return 'status-up';
-    if (status === 'warning') return 'status-warning';
-    return 'status-down';
-  };
-
-  const getStatusText = (trunk) => {
-    if (trunk.status === 'down') return 'DOWN';
-    if (trunk.status === 'warning') return 'HIGH LATENCY';
-    return 'UP';
-  };
-
-  const getStatusIcon = (status) => {
-    if (status === 'up') return '●';
-    if (status === 'warning') return '▲';
-    return '●';
-  };
-
-  const sortedTrunks = [...trunks].sort((a, b) => {
-    if (a.status === 'down' && b.status !== 'down') return -1;
-    if (a.status !== 'down' && b.status === 'down') return 1;
-    if (a.status === 'warning' && b.status === 'up') return -1;
-    if (a.status === 'up' && b.status === 'warning') return 1;
-    return 0;
-  });
-
-  const handleTrunkClick = (trunkId) => {
-    navigate(`/trunk/${trunkId}`);
-  };
-
-  const handleLogout = () => {
-    navigate('/login');
-  };
-
-  const handleNotificationClick = () => {
-    navigate('/notifications');
-  };
-
-  const handleNetworkClick = () => {
-    navigate('/network');
-  };
-
-  if (loading && trunks.length === 0) {
-    return (
-      <div className="dashboard">
-        <div style={{textAlign: 'center', padding: '4rem'}}>
-          <h2>Loading monitoring data...</h2>
-        </div>
-      </div>
-    );
-  }
 
   return (
-    <div className="dashboard">
-      {/* Header */}
-      <div className="dashboard-header">
-        <div className="header-left">
-          <div className="logo-section">
-            <div className="logo-icon">⬡</div>
-            <div className="logo-text">
-              <h1>SAT Monitor</h1>
-              <span className="company-name">Skywave Technologies</span>
-            </div>
-          </div>
-        </div>
-        
-        <div className="header-right">
-          <div className="live-indicator">
-            <span className="live-dot"></span>
-            <span>Live</span>
-          </div>
-          
-          {/* Network Monitoring Button - NEW */}
-          <button className="network-button" onClick={handleNetworkClick}>
-            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M5 12.55a11 11 0 0 1 14.08 0" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-              <path d="M1.42 9a16 16 0 0 1 21.16 0" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-              <path d="M8.53 16.11a6 6 0 0 1 6.95 0" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-              <line x1="12" y1="20" x2="12.01" y2="20" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
-            </svg>
-            Network
-          </button>
-          
-          <button className="notification-button" onClick={handleNotificationClick}>
-            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-              <path d="M13.73 21a2 2 0 0 1-3.46 0" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-            </svg>
-            {unreadNotifications > 0 && (
-              <span className="notification-badge">{unreadNotifications}</span>
-            )}
-          </button>
-          
-          <button className="logout-button" onClick={handleLogout}>
-            Logout
-          </button>
-        </div>
-      </div>
+    <>
+      <motion.div 
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8"
+      >
+        <SummaryCard label="Total Trunks" value={totalTrunks} icon={<Server />} />
+        <SummaryCard label="Trunks UP" value={trunksUp} icon={<CheckCircle2 />} color="text-emerald-500" />
+        <SummaryCard label="Trunks DOWN" value={trunksDown} icon={<AlertCircle />} color="text-red-500" />
+        <SummaryCard label="Latency" value={`${networkStatus.avgLatency}ms`} icon={<Activity />} sub={networkStatus.status} />
+      </motion.div>
 
-      {/* Main Content */}
-      <div className="dashboard-content">
-        {/* Summary Cards */}
-        <div className="summary-cards">
-          <div className="summary-card">
-            <div className="card-label">Total Trunks</div>
-            <div className="card-value">{totalTrunks}</div>
-          </div>
-          
-          <div className="summary-card status-up-card">
-            <div className="card-icon">
-              <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                <polyline points="22 4 12 14.01 9 11.01" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-              </svg>
-            </div>
-            <div className="card-content">
-              <div className="card-label">Trunks UP</div>
-              <div className="card-value">{trunksUp}</div>
-            </div>
-          </div>
-          
-          <div className="summary-card status-down-card">
-            <div className="card-icon">
-              <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2"/>
-                <line x1="15" y1="9" x2="9" y2="15" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
-                <line x1="9" y1="9" x2="15" y2="15" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
-              </svg>
-            </div>
-            <div className="card-content">
-              <div className="card-label">Trunks DOWN</div>
-              <div className="card-value">{trunksDown}</div>
-            </div>
-          </div>
-          
-          <div className="summary-card network-card">
-            <div className="card-icon">
-              <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M5 12.55a11 11 0 0 1 14.08 0" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                <path d="M1.42 9a16 16 0 0 1 21.16 0" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                <path d="M8.53 16.11a6 6 0 0 1 6.95 0" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                <line x1="12" y1="20" x2="12.01" y2="20" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
-              </svg>
-            </div>
-            <div className="card-content">
-              <div className="card-label">Network Status</div>
-              <div className="card-value">{avgLatency}ms</div>
-              <div className="card-sub">{networkStatus.status}</div>
-            </div>
-          </div>
-        </div>
-
-        {/* Trunk Status Table */}
-        <div className="trunk-table-container">
-          <h2 className="section-title">Trunk Status</h2>
-          <table className="trunk-table">
-            <thead>
-              <tr>
-                <th>Trunk Name</th>
-                <th>PBX</th>
-                <th>Status</th>
-                <th>Last Changed</th>
-                <th>Latency</th>
-                <th>Bandwidth</th>
-              </tr>
-            </thead>
-            <tbody>
-              {sortedTrunks.map(trunk => (
-                <tr 
-                  key={trunk.id} 
-                  className={`trunk-row ${getStatusColor(trunk.status)}`}
-                  onClick={() => handleTrunkClick(trunk.id)}
+      <motion.div 
+        initial={{ opacity: 0, scale: 0.98 }}
+        animate={{ opacity: 1, scale: 1 }}
+        className="relative z-10 bg-[#0A0A0A] border border-zinc-800 rounded-xl overflow-hidden"
+      >
+        <table className="w-full text-left">
+          <thead className="bg-zinc-900/50 border-b border-zinc-800">
+            <tr>
+              {['Trunk Name', 'Status', 'Latency', 'Last Changed'].map(h => (
+                <th key={h} className="p-4 text-xs uppercase text-zinc-500 tracking-widest font-mono">{h}</th>
+              ))}
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-zinc-800">
+            <AnimatePresence>
+              {trunks.map(trunk => (
+                <motion.tr 
+                  key={trunk.id}
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  className="hover:bg-zinc-900/50 transition-colors cursor-pointer"
                 >
-                  <td className="trunk-name">{trunk.name}</td>
-                  <td className="trunk-pbx">{trunk.pbx}</td>
-                  <td>
-                    <span className={`status-badge ${getStatusColor(trunk.status)}`}>
-                      <span className="status-icon">{getStatusIcon(trunk.status)}</span>
-                      {getStatusText(trunk)}
+                  <td className="p-4 font-medium">{trunk.name}</td>
+                  <td className="p-4">
+                    <span className={`inline-flex items-center gap-1.5 px-2 py-1 rounded-full text-xs font-medium ${trunk.status === 'up' ? 'bg-emerald-500/10 text-emerald-500' : 'bg-red-500/10 text-red-500'}`}>
+                      {trunk.status === 'up' ? <CheckCircle2 className="w-3 h-3" /> : <AlertCircle className="w-3 h-3" />}
+                      {trunk.status.toUpperCase()}
                     </span>
                   </td>
-                  <td className="trunk-latency">
-                    {trunk.lastChanged || '—'}
-                  </td>
-                  <td className="trunk-latency">
-                    {trunk.latency ? `${trunk.latency}ms` : 'N/A'}
-                  </td>
-                  <td className="trunk-bandwidth">
-                    N/A
-                  </td>
-                </tr>
+                  <td className="p-4 font-mono text-sm text-zinc-400">{trunk.latency || '—'}ms</td>
+                  <td className="p-4 text-sm text-zinc-400">{trunk.lastChanged || '—'}</td>
+                </motion.tr>
               ))}
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </div>
+            </AnimatePresence>
+          </tbody>
+        </table>
+      </motion.div>
+    </>
   );
 };
+
+const SummaryCard = ({ label, value, icon, color = "text-white", sub }) => (
+  <motion.div
+    whileHover={{ y: -4 }}
+    className="bg-zinc-900/50 border border-zinc-800 p-6 rounded-xl flex items-center justify-between"
+  >
+    <div>
+      <p className="text-xs text-zinc-500 uppercase tracking-widest font-mono mb-1">{label}</p>
+      <h3 className={`text-2xl font-bold ${color}`}>{value}</h3>
+      {sub && <p className="text-xs text-zinc-500 mt-1">{sub}</p>}
+    </div>
+    <div className="text-zinc-600">{icon}</div>
+  </motion.div>
+);
 
 export default Dashboard;

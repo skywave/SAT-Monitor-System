@@ -1,24 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { motion } from 'framer-motion';
+import { Activity, Zap, Server, Phone, RefreshCw, CheckCircle2, AlertCircle } from 'lucide-react';
 import { api } from '../../../../config/api';
-import './networkmonitoring.css';
 
-// Helper functions
 const getStatus = (statusText, latency) => {
-  if (statusText === 'registration_failed' || 
-      statusText === 'unreachable' || 
-      statusText === 'down' ||
-      statusText === 'disabled') {
-    return 'down';
-  }
-  if (latency && latency > 100) {
-    return 'warning';
-  }
+  if (['registration_failed', 'unreachable', 'down', 'disabled'].includes(statusText)) return 'down';
+  if (latency && latency > 100) return 'warning';
   return 'up';
-};
-
-const getStatusColor = (status) => {
-  return status === 'up' || status === 'reachable' ? 'status-up' : 'status-down';
 };
 
 const getLatencyQuality = (latency) => {
@@ -29,31 +17,43 @@ const getLatencyQuality = (latency) => {
   return 'Poor';
 };
 
+const qualityClass = (q) => {
+  if (q === 'Excellent') return 'text-emerald-400';
+  if (q === 'Good') return 'text-sky-400';
+  if (q === 'Fair') return 'text-amber-400';
+  if (q === 'Poor') return 'text-red-400';
+  return 'text-zinc-500';
+};
+
+const StatusBadge = ({ status }) => {
+  const map = {
+    up: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20',
+    reachable: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20',
+    warning: 'bg-amber-500/10 text-amber-400 border-amber-500/20',
+    down: 'bg-red-500/10 text-red-400 border-red-500/20',
+    unreachable: 'bg-red-500/10 text-red-400 border-red-500/20',
+  };
+  return (
+    <span className={`inline-flex items-center gap-1.5 px-2 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest border ${map[status] || 'bg-zinc-800 text-zinc-400 border-zinc-700'}`}>
+      {status === 'up' || status === 'reachable' ? <CheckCircle2 className="w-3 h-3" /> : <AlertCircle className="w-3 h-3" />}
+      {status}
+    </span>
+  );
+};
+
+const Card = ({ title, icon: Icon, children }) => (
+  <div className="bg-[#0A0A0A] border border-zinc-800 rounded-xl overflow-hidden">
+    <h3 className="px-6 py-4 text-xs font-bold text-zinc-400 uppercase tracking-widest flex items-center gap-2 border-b border-zinc-800">
+      <Icon className="w-4 h-4 text-purple-400" /> {title}
+    </h3>
+    <div className="p-6">{children}</div>
+  </div>
+);
+
 const NetworkMonitoring = () => {
-  const navigate = useNavigate();
-  
   const [trunks, setTrunks] = useState([]);
-  const [satMonitorReachability, setSatMonitorReachability] = useState({
-    gateway: 'unknown',
-    nas: 'unknown',
-    mno: 'unknown',
-    customer: 'unknown',
-    google: 'unknown'
-  });
-  const [satMonitorLatency, setSatMonitorLatency] = useState({
-    gateway: 0,
-    nas: 0,
-    customer: 0,
-    google: 0
-  });
-  // eslint-disable-next-line no-unused-vars
-  const [satMonitorBandwidth, setSatMonitorBandwidth] = useState({
-    gateway: 0,
-    nas: 0,
-    mno: 0,
-    customer: 0,
-    google: 0
-  });
+  const [reachability, setReachability] = useState({});
+  const [latency, setLatency] = useState({});
   const [callStats, setCallStats] = useState({
     trunks: {},
     customerFacing: { active: 0, failed: 0, unanswered: 0, rejected: 0 },
@@ -62,11 +62,16 @@ const NetworkMonitoring = () => {
   });
   const [loading, setLoading] = useState(true);
 
-  const fetchTrunks = async () => {
+  const fetchData = async () => {
+    setLoading(true);
     try {
-      const data = await api.getTrunks();
+      const [trunkData, net, calls] = await Promise.all([
+        api.getTrunks(),
+        api.getNetworkStatus(),
+        api.getCallStats()
+      ]);
       const trunkMap = new Map();
-      data.forEach(trunk => {
+      (trunkData || []).forEach((trunk) => {
         if (!trunkMap.has(trunk.trunk_id)) {
           trunkMap.set(trunk.trunk_id, {
             id: trunk.trunk_id,
@@ -77,270 +82,132 @@ const NetworkMonitoring = () => {
         }
       });
       setTrunks(Array.from(trunkMap.values()));
-    } catch (error) {
-      console.error('Error fetching trunks:', error);
-    }
-  };
-
-  const fetchNetworkData = async () => {
-    try {
-      const data = await api.getNetworkStatus();
-      const reachability = {
-        gateway: data.gateway_reachable ? 'reachable' : 'unreachable',
-        nas: data.nas_reachable ? 'reachable' : 'unreachable',
-        mno: data.mno_reachable ? 'reachable' : 'unreachable',
-        customer: data.customer_reachable ? 'reachable' : 'unreachable',
-        google: data.google_reachable ? 'reachable' : 'unreachable'
-      };
-      const latency = {
-        gateway: data.gateway_latency || 0,
-        nas: data.nas_latency || 0,
-        customer: data.customer_latency || 0,
-        google: data.google_latency || 0
-      };
-      setSatMonitorReachability(reachability);
-      setSatMonitorLatency(latency);
-    } catch (error) {
-      console.error('Error fetching network data:', error);
-    }
-  };
-
-  const fetchCallStats = async () => {
-    try {
-      const data = await api.getCallStats();
-      setCallStats({
-        trunks: data.trunks || {},
-        customerFacing: data.customerFacing || { active: 0, failed: 0, unanswered: 0, rejected: 0 },
-        mnoFacing: data.mnoFacing || { active: 0, failed: 0, unanswered: 0, rejected: 0 },
-        gatewayFacing: data.gatewayFacing || { active: 0, failed: 0, unanswered: 0, rejected: 0 }
+      setReachability({
+        gateway: net.gateway_reachable ? 'reachable' : 'unreachable',
+        nas: net.nas_reachable ? 'reachable' : 'unreachable',
+        mno: net.mno_reachable ? 'reachable' : 'unreachable',
+        customer: net.customer_reachable ? 'reachable' : 'unreachable',
+        google: net.google_reachable ? 'reachable' : 'unreachable'
       });
-    } catch (error) {
-      console.error('Error fetching call stats:', error);
+      setLatency({
+        gateway: net.gateway_latency || 0,
+        nas: net.nas_latency || 0,
+        customer: net.customer_latency || 0,
+        google: net.google_latency || 0
+      });
+      setCallStats({
+        trunks: calls.trunks || {},
+        customerFacing: calls.customerFacing || { active: 0, failed: 0, unanswered: 0, rejected: 0 },
+        mnoFacing: calls.mnoFacing || { active: 0, failed: 0, unanswered: 0, rejected: 0 },
+        gatewayFacing: calls.gatewayFacing || { active: 0, failed: 0, unanswered: 0, rejected: 0 }
+      });
+    } catch (e) {
+      console.error(e);
     }
+    setLoading(false);
   };
 
   useEffect(() => {
-    const loadData = async () => {
-      setLoading(true);
-      await Promise.all([
-        fetchTrunks(),
-        fetchNetworkData(),
-        fetchCallStats()
-      ]);
-      setLoading(false);
-    };
-    
-    loadData();
-    const interval = setInterval(loadData, 30000);
+    fetchData();
+    const interval = setInterval(fetchData, 30000);
     return () => clearInterval(interval);
   }, []);
 
-  const handleBackToDashboard = () => {
-    navigate('/dashboard');
-  };
-
-  if (loading) {
-    return (
-      <div className="network-monitoring">
-        <div style={{textAlign: 'center', padding: '4rem'}}>
-          <h2>Loading monitoring data...</h2>
-        </div>
-      </div>
-    );
-  }
+  const sides = [
+    { key: 'customerFacing', label: 'Customer Facing' },
+    { key: 'mnoFacing', label: 'MNO Facing' },
+    { key: 'gatewayFacing', label: 'Gateway Facing' }
+  ];
 
   return (
-    <div className="network-monitoring">
-      <div className="network-header">
-        <div className="header-content">
-          <button className="back-button" onClick={handleBackToDashboard}>
-            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M19 12H5M5 12L12 19M5 12L12 5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-            </svg>
-            Back to Dashboard
-          </button>
-          <div className="header-title">
-            <h1>Network Monitoring</h1>
-            <span className="subtitle">Real-time Network Topology & Metrics</span>
-          </div>
-          <div className="live-badge">
-            <span className="pulse-dot"></span>
-            LIVE MONITORING
-          </div>
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold text-white">Network Topology</h1>
+          <p className="text-zinc-500 text-sm">Live reachability, latency, and call metrics</p>
         </div>
+        <motion.button
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.97 }}
+          onClick={fetchData}
+          className="p-2 text-zinc-500 hover:text-white border border-zinc-800 rounded-lg"
+        >
+          <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
+        </motion.button>
       </div>
 
-      <div className="network-content">
-        {/* Trunk Status Section */}
-        <div className="section-title">
-          <h2>Trunk Status</h2>
-          <span className="section-subtitle">Monitored Trunks</span>
-        </div>
-
-        <div className="trunk-status-grid">
-          {trunks.length > 0 ? trunks.map(trunk => (
-            <div key={trunk.id} className={`trunk-card ${getStatusColor(trunk.status)}`}>
-              <div className="trunk-name">{trunk.name}</div>
-              <div className="trunk-ip">N/A</div>
-              <div className={`trunk-status-badge ${getStatusColor(trunk.status)}`}>
-                <span className="status-dot">●</span>
-                {trunk.status === 'up' ? 'UP' : trunk.status === 'warning' ? 'WARNING' : 'DOWN'}
+      <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <Card title="Trunk Health" icon={Server}>
+          <div className="divide-y divide-zinc-800 -m-6">
+            {trunks.length === 0 && <p className="p-6 text-sm text-zinc-500">No trunk data available</p>}
+            {trunks.map((trunk) => (
+              <div key={trunk.id} className="px-6 py-4 flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-zinc-200">{trunk.name}</p>
+                  <p className="text-xs text-zinc-500 font-mono">{trunk.latency ? `${trunk.latency}ms` : 'N/A'}</p>
+                </div>
+                <StatusBadge status={trunk.status} />
               </div>
-            </div>
-          )) : (
-            <div style={{padding: '2rem', textAlign: 'center', gridColumn: '1 / -1'}}>
-              No trunk data available
-            </div>
-          )}
-        </div>
-
-        {/* IP Reachability Section */}
-        <div className="section-title">
-          <h2>IP Reachability</h2>
-          <span className="section-subtitle">ICMP Echo Test Results</span>
-        </div>
-
-        <div className="reachability-container">
-          <div className="reachability-section">
-            <h3 className="subsection-title">From SAT Monitor</h3>
-            <div className="reachability-grid">
-              {Object.entries(satMonitorReachability).map(([target, status]) => (
-                <div key={`sat-${target}`} className={`reach-card ${getStatusColor(status)}`}>
-                  <div className="reach-target">{target.toUpperCase()}</div>
-                  <div className={`reach-status ${getStatusColor(status)}`}>
-                    <span className="status-icon">●</span>
-                    {status === 'reachable' ? 'REACHABLE' : status === 'unreachable' ? 'UNREACHABLE' : 'NO DATA'}
-                  </div>
-                </div>
-              ))}
-            </div>
+            ))}
           </div>
-        </div>
+        </Card>
 
-        {/* Link Latency Section */}
-        <div className="section-title">
-          <h2>Link Latency</h2>
-          <span className="section-subtitle">Round-Trip Time (RTT) in milliseconds</span>
-        </div>
+        <Card title="IP Reachability" icon={Activity}>
+          <div className="grid grid-cols-2 gap-3">
+            {Object.entries(reachability).map(([target, status]) => (
+              <div key={target} className="p-3 rounded-lg border border-zinc-800 bg-zinc-900/40">
+                <p className="text-[10px] uppercase tracking-widest text-zinc-500 mb-2">{target}</p>
+                <StatusBadge status={status} />
+              </div>
+            ))}
+          </div>
+        </Card>
 
-        <div className="latency-container">
-          <table className="latency-table">
+        <Card title="Link Latency" icon={Zap}>
+          <table className="w-full text-sm">
             <thead>
-              <tr><th>Source</th><th>Destination</th><th>Latency</th><th>Quality</th></tr>
+              <tr className="text-[10px] uppercase tracking-widest text-zinc-500">
+                <th className="text-left pb-3">Destination</th>
+                <th className="text-right pb-3">RTT</th>
+                <th className="text-right pb-3">Quality</th>
+              </tr>
             </thead>
-            <tbody>
-              <tr>
-                <td className="source-cell">SAT Monitor</td>
-                <td>Gateway</td>
-                <td className="latency-value">{satMonitorLatency.gateway > 0 ? `${satMonitorLatency.gateway}ms` : 'N/A'}</td>
-                <td><span className={`quality-badge ${getLatencyQuality(satMonitorLatency.gateway).toLowerCase()}`}>{getLatencyQuality(satMonitorLatency.gateway)}</span></td>
-              </tr>
-              <tr>
-                <td className="source-cell">SAT Monitor</td>
-                <td>NAS</td>
-                <td className="latency-value">{satMonitorLatency.nas > 0 ? `${satMonitorLatency.nas}ms` : 'N/A'}</td>
-                <td><span className={`quality-badge ${getLatencyQuality(satMonitorLatency.nas).toLowerCase()}`}>{getLatencyQuality(satMonitorLatency.nas)}</span></td>
-              </tr>
-              <tr>
-                <td className="source-cell">SAT Monitor</td>
-                <td>Customer Server</td>
-                <td className="latency-value">{satMonitorLatency.customer > 0 ? `${satMonitorLatency.customer}ms` : 'N/A'}</td>
-                <td><span className={`quality-badge ${getLatencyQuality(satMonitorLatency.customer).toLowerCase()}`}>{getLatencyQuality(satMonitorLatency.customer)}</span></td>
-              </tr>
-              <tr>
-                <td className="source-cell">SAT Monitor</td>
-                <td>Google</td>
-                <td className="latency-value">{satMonitorLatency.google > 0 ? `${satMonitorLatency.google}ms` : 'N/A'}</td>
-                <td><span className={`quality-badge ${getLatencyQuality(satMonitorLatency.google).toLowerCase()}`}>{getLatencyQuality(satMonitorLatency.google)}</span></td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-
-        {/* Link Bandwidth Section */}
-        <div className="section-title">
-          <h2>Link Bandwidth</h2>
-          <span className="section-subtitle">Available bandwidth in Kbps</span>
-        </div>
-
-        <div className="bandwidth-container">
-          <div className="bandwidth-section">
-            <h3 className="subsection-title">From SAT Monitor</h3>
-            <div className="bandwidth-grid">
-              {Object.entries(satMonitorBandwidth).map(([key, value]) => (
-                <div key={key} className="bandwidth-card">
-                  <div className="bandwidth-target">{key.charAt(0).toUpperCase() + key.slice(1)}</div>
-                  <div className="bandwidth-value">{value > 0 ? `${value} Kbps` : 'N/A'}</div>
-                  <div className="bandwidth-bar">
-                    <div className="bandwidth-fill" style={{width: value > 0 ? `${Math.min((value / 1024) * 100, 100)}%` : '0%'}}></div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-
-        {/* Call Statistics Section */}
-        <div className="section-title">
-          <h2>Call Statistics</h2>
-          <span className="section-subtitle">Since 00:00 Today</span>
-        </div>
-
-        <div className="call-aggregate-grid">
-          <div className="aggregate-card customer">
-            <h4>Customer Facing Side</h4>
-            <div className="aggregate-stats">
-              <div className="agg-stat"><span className="agg-label">Active</span><span className="agg-value">{callStats.customerFacing.active}</span></div>
-              <div className="agg-stat"><span className="agg-label">Failed</span><span className="agg-value failed">{callStats.customerFacing.failed}</span></div>
-              <div className="agg-stat"><span className="agg-label">Unanswered</span><span className="agg-value">{callStats.customerFacing.unanswered}</span></div>
-              <div className="agg-stat"><span className="agg-label">Rejected</span><span className="agg-value">{callStats.customerFacing.rejected}</span></div>
-            </div>
-          </div>
-          <div className="aggregate-card mno">
-            <h4>MNO Facing Side</h4>
-            <div className="aggregate-stats">
-              <div className="agg-stat"><span className="agg-label">Active</span><span className="agg-value">{callStats.mnoFacing.active}</span></div>
-              <div className="agg-stat"><span className="agg-label">Failed</span><span className="agg-value failed">{callStats.mnoFacing.failed}</span></div>
-              <div className="agg-stat"><span className="agg-label">Unanswered</span><span className="agg-value">{callStats.mnoFacing.unanswered}</span></div>
-              <div className="agg-stat"><span className="agg-label">Rejected</span><span className="agg-value">{callStats.mnoFacing.rejected}</span></div>
-            </div>
-          </div>
-          <div className="aggregate-card gateway">
-            <h4>Gateway Facing Side</h4>
-            <div className="aggregate-stats">
-              <div className="agg-stat"><span className="agg-label">Active</span><span className="agg-value">{callStats.gatewayFacing.active}</span></div>
-              <div className="agg-stat"><span className="agg-label">Failed</span><span className="agg-value failed">{callStats.gatewayFacing.failed}</span></div>
-              <div className="agg-stat"><span className="agg-label">Unanswered</span><span className="agg-value">{callStats.gatewayFacing.unanswered}</span></div>
-              <div className="agg-stat"><span className="agg-label">Rejected</span><span className="agg-value">{callStats.gatewayFacing.rejected}</span></div>
-            </div>
-          </div>
-        </div>
-
-        {/* Per-Trunk Stats */}
-        <div className="per-trunk-container">
-          <h3 className="subsection-title">Per-Trunk Statistics</h3>
-          <table className="trunk-stats-table">
-            <thead>
-              <tr><th>Trunk Name</th><th>Active Calls</th><th>Failed Calls</th><th>Unanswered Calls</th><th>Rejected Calls</th></tr>
-            </thead>
-            <tbody>
-              {Object.keys(callStats.trunks).length > 0 ? 
-                Object.entries(callStats.trunks).map(([trunkName, stats]) => (
-                  <tr key={trunkName}>
-                    <td className="trunk-name-cell">{trunkName}</td>
-                    <td className="stat-cell active">{stats.active}</td>
-                    <td className="stat-cell failed">{stats.failed}</td>
-                    <td className="stat-cell unanswered">{stats.unanswered}</td>
-                    <td className="stat-cell rejected">{stats.rejected}</td>
+            <tbody className="divide-y divide-zinc-800">
+              {Object.entries(latency).map(([target, val]) => {
+                const q = getLatencyQuality(val);
+                return (
+                  <tr key={target}>
+                    <td className="py-3 capitalize text-zinc-300">{target}</td>
+                    <td className="py-3 text-right font-mono tabular-nums">{val > 0 ? `${val}ms` : 'N/A'}</td>
+                    <td className={`py-3 text-right text-xs font-bold ${qualityClass(q)}`}>{q}</td>
                   </tr>
-                )) : (
-                  <tr><td colSpan="5" style={{textAlign: 'center', padding: '1rem'}}>No per-trunk data available</td></tr>
-                )
-              }
+                );
+              })}
             </tbody>
           </table>
-        </div>
-      </div>
+        </Card>
+
+        <Card title="Call Statistics" icon={Phone}>
+          <div className="grid grid-cols-1 gap-3">
+            {sides.map((side) => {
+              const stats = callStats[side.key] || {};
+              return (
+                <div key={side.key} className="p-3 rounded-lg border border-zinc-800">
+                  <p className="text-[10px] uppercase tracking-widest text-zinc-500 mb-2">{side.label}</p>
+                  <div className="grid grid-cols-4 gap-2 text-center">
+                    {['active', 'failed', 'unanswered', 'rejected'].map((k) => (
+                      <div key={k}>
+                        <p className={`text-lg font-bold tabular-nums ${k === 'failed' ? 'text-red-400' : 'text-white'}`}>{stats[k] ?? 0}</p>
+                        <p className="text-[10px] text-zinc-500 uppercase">{k}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </Card>
+      </motion.div>
     </div>
   );
 };
