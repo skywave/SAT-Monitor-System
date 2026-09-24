@@ -9,7 +9,6 @@ export const AppDataSource = new DataSource({
   username: process.env.DB_USER,
   password: String(process.env.DB_PASS || ''),
   database: process.env.DB_NAME,
-  ssl: process.env.DB_HOST === 'postgres' ? false : { rejectUnauthorized: false },
   entities: [],  // ✅ Empty for now (just to test migration)
   migrations: ['src/persistence/migrations/**/*.ts'],
   synchronize: false,
