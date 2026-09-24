@@ -137,6 +137,32 @@ export class AddCompleteDatabaseSchema1709700000000 implements MigrationInterfac
       )
     `);
 
+    // Create event table
+    await queryRunner.query(`
+      CREATE TABLE "event" (
+        "id" uuid NOT NULL DEFAULT uuid_generate_v4(),
+        "pbx_id" character varying,
+        "event_type" character varying NOT NULL,
+        "related_entity_type" character varying NOT NULL,
+        "related_entity_id" uuid,
+        "description" text NOT NULL,
+        "severity" character varying NOT NULL,
+        "triggered_by" character varying,
+        "alert_config_id" uuid,
+        "event_data" jsonb,
+        "timestamp" TIMESTAMPTZ NOT NULL,
+        "resolved" boolean NOT NULL DEFAULT false,
+        "resolved_at" TIMESTAMPTZ,
+        "resolved_by" character varying,
+        "resolution_notes" text,
+        "notification_sent" boolean NOT NULL DEFAULT false,
+        "correlation_id" character varying,
+        "created_at" TIMESTAMPTZ NOT NULL DEFAULT now(),
+        "updated_at" TIMESTAMPTZ NOT NULL DEFAULT now(),
+        CONSTRAINT "PK_event" PRIMARY KEY ("id")
+      )
+    `);
+
     // Create indexes for performance
     await queryRunner.query(`CREATE INDEX "IDX_daily_call_stats_pbx_id_date" ON "daily_call_stats" ("pbx_id", "date")`);
     await queryRunner.query(`CREATE INDEX "IDX_trunk_status_history_pbx_id_timestamp" ON "trunk_status_history" ("pbx_id", "changed_at")`);
