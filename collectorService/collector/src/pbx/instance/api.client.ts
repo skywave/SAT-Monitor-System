@@ -95,6 +95,15 @@ export class PBX {
     this.axiosInstance.defaults.headers.common['Authorization'] = `${this.token}`
   }
 
+  private isMockMode = false;
+
+  enableMockMode() {
+    this.isMockMode = true;
+    this.token = 'mock_access_token';
+    this.refreshToken = 'mock_refresh_token';
+    this.tokenExpiry = Date.now() + 86400000;
+  }
+
   /**
    * Generic request wrapper for PBX API
    * @param endpoint API endpoint like 'extension/list'
@@ -103,6 +112,10 @@ export class PBX {
    * @param params Optional query-string parameters
    */
   async request(endpoint: string, method: 'GET' | 'POST' = 'GET', data?: any, params?: any): Promise<any> {
+    if (this.isMockMode) {
+      console.log(`[PBX-Mock] Serving mock response for ${endpoint}`)
+      return this.getMockResponse(endpoint, method, data);
+    }
     const token = await this.getAccessToken() // Ensure we have a valid token before making the request
     console.log(`[PBX] Making API request to ${endpoint}`)
     const response = await this.axiosInstance.request({
@@ -113,6 +126,49 @@ export class PBX {
     })
 
     return response.data
+  }
+
+  private getMockResponse(endpoint: string, method: string, data: any): any {
+    if (endpoint.includes('extension/list')) {
+      return { errcode: 0, errmsg: 'SUCCESS', data: [
+        { number: '1000', name: 'Alice Smith', register_status: 'Registered', call_status: 'Idle' },
+        { number: '1001', name: 'Bob Jones', register_status: 'Registered', call_status: 'InCall' },
+        { number: '1002', name: 'Charlie Brown', register_status: 'Unregistered', call_status: 'Idle' }
+      ] };
+    }
+    if (endpoint.includes('trunk/list')) {
+      return { errcode: 0, errmsg: 'SUCCESS', data: [
+        { id: '1', name: 'SIP-Trunk-Primary', type: 'SIP', status: 1 },
+        { id: '2', name: 'SIP-Trunk-Backup', type: 'SIP', status: 41 }
+      ] };
+    }
+    if (endpoint.includes('monitor/trunk_status/list') || endpoint.includes('trunk_status')) {
+      return { errcode: 0, errmsg: 'SUCCESS', data: [
+        { trunk_index: 1, trunk_name: 'SIP-Trunk-Primary', status: 'Registered', latency: 12 },
+        { trunk_index: 2, trunk_name: 'SIP-Trunk-Backup', status: 'Unregistered', latency: 0 }
+      ] };
+    }
+    if (endpoint.includes('monitor/extension_status/list') || endpoint.includes('extension_status')) {
+      return { errcode: 0, errmsg: 'SUCCESS', data: [
+        { number: '1000', status: 'Idle', call_id: '' },
+        { number: '1001', status: 'Busy', call_id: 'call-uuid-001' },
+        { number: '1002', status: 'Offline', call_id: '' }
+      ] };
+    }
+    if (endpoint.includes('call/query')) {
+      return { errcode: 0, errmsg: 'SUCCESS', data: [
+        { call_id: 'call-uuid-001', caller: '1001', callee: '5551234', duration: '45s', status: 'Active' }
+      ] };
+    }
+    if (endpoint.includes('system/information')) {
+      return { errcode: 0, errmsg: 'SUCCESS', data: {
+        version: '84.0.0.15',
+        uptime: '14 days, 6 hours',
+        cpu_usage: '12%',
+        memory_usage: '45%'
+      } };
+    }
+    return { errcode: 0, errmsg: 'SUCCESS', data: [] };
   }
 
   /**

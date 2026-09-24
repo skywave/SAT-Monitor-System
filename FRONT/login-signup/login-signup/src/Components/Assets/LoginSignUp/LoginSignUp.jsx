@@ -21,7 +21,6 @@ const SignUp = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     
-    // Basic validation
     const newErrors = {};
     if (formData.password !== formData.confirmPassword) {
       newErrors.confirmPassword = 'Passwords do not match';
@@ -38,12 +37,10 @@ const SignUp = () => {
     setIsLoading(true);
     setErrors({});
     
-    // Simulate signup delay
     setTimeout(() => {
       setIsLoading(false);
-      console.log('Signup attempted with:', formData);
       navigate('/login');
-    }, 1500);
+    }, 1200);
   };
 
   const handleChange = (e) => {
@@ -64,46 +61,36 @@ const SignUp = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#09090B] text-zinc-100 flex items-center justify-center p-4 relative overflow-hidden font-sans">
-      {/* GitHub-style Background Ambient Orbs */}
-      <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-purple-600/10 rounded-full blur-[120px] pointer-events-none" />
-      <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-blue-600/10 rounded-full blur-[120px] pointer-events-none" />
-      
-      {/* Animated Background Grid */}
-      <div className="absolute inset-0 opacity-[0.03] pointer-events-none" 
-           style={{ backgroundImage: 'linear-gradient(#fff 1px, transparent 1px), linear-gradient(90deg, #fff 1px, transparent 1px)', backgroundSize: '40px 40px' }} />
-
+    <div className="min-h-screen bg-[#f4f6f9] text-slate-900 flex items-center justify-center p-4 relative overflow-hidden font-sans">
       <motion.div 
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={springConfig}
         className="w-full max-w-xl z-10"
       >
-        {/* Header */}
         <div className="text-center mb-8">
           <motion.div 
             initial={{ scale: 0.8 }}
             animate={{ scale: 1 }}
-            className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-[#9966ff] to-[#6b46c1] mb-4 shadow-lg shadow-purple-500/20"
+            className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-blue-600 mb-4 shadow-md text-white"
           >
-            <UserPlus className="w-8 h-8 text-white" />
+            <UserPlus className="w-8 h-8" />
           </motion.div>
-          <h1 className="text-3xl font-bold tracking-tight bg-gradient-to-b from-white to-white/60 bg-clip-text text-transparent">
+          <h1 className="text-3xl font-bold tracking-tight text-slate-900">
             Create Admin Account
           </h1>
-          <p className="text-zinc-500 mt-2 text-sm uppercase tracking-[0.2em] font-medium">
+          <p className="text-slate-500 mt-2 text-xs uppercase tracking-widest font-semibold">
             SAT MONITOR • SKYWAVE TECHNOLOGIES
           </p>
         </div>
 
-        {/* Signup Card */}
-        <div className="bg-zinc-900/50 backdrop-blur-xl border border-zinc-800 rounded-2xl p-8 shadow-2xl">
+        <div className="bg-white border border-slate-200 rounded-2xl p-8 shadow-xl">
           <form onSubmit={handleSubmit} className="space-y-5">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
               <div className="space-y-2">
-                <label className="text-xs font-mono uppercase tracking-widest text-zinc-500 ml-1">Full Name</label>
+                <label className="text-xs font-semibold uppercase tracking-wider text-slate-600 ml-1">Full Name</label>
                 <div className="relative group">
-                  <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-600 group-focus-within:text-[#9966ff] transition-colors" />
+                  <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 group-focus-within:text-blue-600 transition-colors" />
                   <input
                     type="text"
                     name="fullName"
@@ -111,21 +98,21 @@ const SignUp = () => {
                     onChange={handleChange}
                     placeholder="John Doe"
                     required
-                    className="w-full bg-zinc-950 border border-zinc-800 rounded-lg py-2.5 pl-10 pr-4 text-sm focus:outline-none focus:ring-2 focus:ring-[#9966ff]/20 focus:border-[#9966ff] transition-all"
+                    className="w-full bg-slate-50 border border-slate-200 rounded-lg py-2.5 pl-10 pr-4 text-sm text-slate-900 focus:outline-none focus:border-blue-600 transition-all"
                   />
                 </div>
               </div>
 
               <div className="space-y-2">
-                <label className="text-xs font-mono uppercase tracking-widest text-zinc-500 ml-1">Department</label>
+                <label className="text-xs font-semibold uppercase tracking-wider text-slate-600 ml-1">Department</label>
                 <div className="relative group">
-                  <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-600 group-focus-within:text-[#9966ff] transition-colors" />
+                  <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 group-focus-within:text-blue-600 transition-colors" />
                   <select
                     name="department"
                     value={formData.department}
                     onChange={handleChange}
                     required
-                    className="w-full bg-zinc-950 border border-zinc-800 rounded-lg py-2.5 pl-10 pr-4 text-sm focus:outline-none focus:ring-2 focus:ring-[#9966ff]/20 focus:border-[#9966ff] transition-all appearance-none"
+                    className="w-full bg-slate-50 border border-slate-200 rounded-lg py-2.5 pl-10 pr-4 text-sm text-slate-900 focus:outline-none focus:border-blue-600 transition-all appearance-none"
                   >
                     <option value="">Select Dept...</option>
                     <option value="it">IT Operations</option>
@@ -138,9 +125,9 @@ const SignUp = () => {
             </div>
 
             <div className="space-y-2">
-              <label className="text-xs font-mono uppercase tracking-widest text-zinc-500 ml-1">Username</label>
+              <label className="text-xs font-semibold uppercase tracking-wider text-slate-600 ml-1">Username</label>
               <div className="relative group">
-                <Shield className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-600 group-focus-within:text-[#9966ff] transition-colors" />
+                <Shield className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 group-focus-within:text-blue-600 transition-colors" />
                 <input
                   type="text"
                   name="username"
@@ -148,15 +135,15 @@ const SignUp = () => {
                   onChange={handleChange}
                   placeholder="admin.user"
                   required
-                  className="w-full bg-zinc-950 border border-zinc-800 rounded-lg py-2.5 pl-10 pr-4 text-sm focus:outline-none focus:ring-2 focus:ring-[#9966ff]/20 focus:border-[#9966ff] transition-all"
+                  className="w-full bg-slate-50 border border-slate-200 rounded-lg py-2.5 pl-10 pr-4 text-sm text-slate-900 focus:outline-none focus:border-blue-600 transition-all"
                 />
               </div>
             </div>
 
             <div className="space-y-2">
-              <label className="text-xs font-mono uppercase tracking-widest text-zinc-500 ml-1">Email Address</label>
+              <label className="text-xs font-semibold uppercase tracking-wider text-slate-600 ml-1">Email Address</label>
               <div className="relative group">
-                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-600 group-focus-within:text-[#9966ff] transition-colors" />
+                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 group-focus-within:text-blue-600 transition-colors" />
                 <input
                   type="email"
                   name="email"
@@ -164,16 +151,16 @@ const SignUp = () => {
                   onChange={handleChange}
                   placeholder="admin@skywave.tech"
                   required
-                  className="w-full bg-zinc-950 border border-zinc-800 rounded-lg py-2.5 pl-10 pr-4 text-sm focus:outline-none focus:ring-2 focus:ring-[#9966ff]/20 focus:border-[#9966ff] transition-all"
+                  className="w-full bg-slate-50 border border-slate-200 rounded-lg py-2.5 pl-10 pr-4 text-sm text-slate-900 focus:outline-none focus:border-blue-600 transition-all"
                 />
               </div>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
               <div className="space-y-2">
-                <label className="text-xs font-mono uppercase tracking-widest text-zinc-500 ml-1">Password</label>
+                <label className="text-xs font-semibold uppercase tracking-wider text-slate-600 ml-1">Password</label>
                 <div className="relative group">
-                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-600 group-focus-within:text-[#9966ff] transition-colors" />
+                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 group-focus-within:text-blue-600 transition-colors" />
                   <input
                     type="password"
                     name="password"
@@ -181,16 +168,16 @@ const SignUp = () => {
                     onChange={handleChange}
                     placeholder="••••••••"
                     required
-                    className={`w-full bg-zinc-950 border ${errors.password ? 'border-red-500/50' : 'border-zinc-800'} rounded-lg py-2.5 pl-10 pr-4 text-sm focus:outline-none focus:ring-2 focus:ring-[#9966ff]/20 focus:border-[#9966ff] transition-all`}
+                    className={`w-full bg-slate-50 border ${errors.password ? 'border-red-500' : 'border-slate-200'} rounded-lg py-2.5 pl-10 pr-4 text-sm text-slate-900 focus:outline-none focus:border-blue-600 transition-all`}
                   />
                 </div>
-                {errors.password && <p className="text-[10px] text-red-500 font-mono ml-1 uppercase">{errors.password}</p>}
+                {errors.password && <p className="text-xs text-red-600 font-medium ml-1">{errors.password}</p>}
               </div>
 
               <div className="space-y-2">
-                <label className="text-xs font-mono uppercase tracking-widest text-zinc-500 ml-1">Confirm</label>
+                <label className="text-xs font-semibold uppercase tracking-wider text-slate-600 ml-1">Confirm</label>
                 <div className="relative group">
-                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-600 group-focus-within:text-[#9966ff] transition-colors" />
+                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 group-focus-within:text-blue-600 transition-colors" />
                   <input
                     type="password"
                     name="confirmPassword"
@@ -198,10 +185,10 @@ const SignUp = () => {
                     onChange={handleChange}
                     placeholder="••••••••"
                     required
-                    className={`w-full bg-zinc-950 border ${errors.confirmPassword ? 'border-red-500/50' : 'border-zinc-800'} rounded-lg py-2.5 pl-10 pr-4 text-sm focus:outline-none focus:ring-2 focus:ring-[#9966ff]/20 focus:border-[#9966ff] transition-all`}
+                    className={`w-full bg-slate-50 border ${errors.confirmPassword ? 'border-red-500' : 'border-slate-200'} rounded-lg py-2.5 pl-10 pr-4 text-sm text-slate-900 focus:outline-none focus:border-blue-600 transition-all`}
                   />
                 </div>
-                {errors.confirmPassword && <p className="text-[10px] text-red-500 font-mono ml-1 uppercase">{errors.confirmPassword}</p>}
+                {errors.confirmPassword && <p className="text-xs text-red-600 font-medium ml-1">{errors.confirmPassword}</p>}
               </div>
             </div>
 
@@ -210,26 +197,25 @@ const SignUp = () => {
               disabled={isLoading}
               whileHover={{ scale: 1.01 }}
               whileTap={{ scale: 0.99 }}
-              className="w-full bg-[#9966ff] hover:bg-[#8855ee] text-white font-bold py-3 rounded-lg text-sm uppercase tracking-widest shadow-lg shadow-purple-500/20 disabled:opacity-50 disabled:cursor-not-allowed transition-all mt-4"
+              className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-lg text-xs uppercase tracking-wider shadow-sm disabled:opacity-50 transition-all mt-4"
             >
               {isLoading ? 'Creating Account...' : 'Initialize Admin Access'}
             </motion.button>
           </form>
 
-          <div className="mt-8 pt-6 border-t border-zinc-800 text-center">
-            <p className="text-zinc-500 text-sm mb-4">Already have security clearance?</p>
+          <div className="mt-8 pt-6 border-t border-slate-200 text-center">
+            <p className="text-slate-500 text-sm mb-3">Already have security clearance?</p>
             <button 
               onClick={handleSwitchToLogin}
-              className="text-xs font-mono uppercase tracking-widest text-[#9966ff] hover:text-white transition-colors"
+              className="text-xs font-bold uppercase tracking-wider text-blue-600 hover:underline transition-colors"
             >
               Back to Login
             </button>
           </div>
         </div>
 
-        {/* Security Notice */}
-        <div className="mt-6 flex items-center justify-center gap-2 text-zinc-600 text-[10px] uppercase tracking-[0.2em]">
-          <Shield className="w-3 h-3" />
+        <div className="mt-6 flex items-center justify-center gap-2 text-slate-500 text-xs uppercase tracking-wider">
+          <Shield className="w-3.5 h-3.5" />
           <span>Internal Security Protocol v2.4.0</span>
         </div>
       </motion.div>

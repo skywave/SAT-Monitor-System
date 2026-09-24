@@ -24,9 +24,9 @@ export const databaseConfig: TypeOrmModuleOptions = {
   username: process.env.DB_USER,
   password: String(process.env.DB_PASS),
   database: process.env.DB_NAME,
-  ssl: { 
+  ssl: process.env.DB_SSL === 'true' ? { 
     rejectUnauthorized: false // Required for Supabase connections
-  },
+  } : false,
   entities: [
     TrunkMonitoringEntity,
     NetworkMonitoringEntity,

@@ -3,7 +3,7 @@
  * Central API helper for all notification service calls.
  */
 
-const BASE = process.env.REACT_APP_NOTIFICATION_API || 'http://localhost:4000';
+const BASE = process.env.REACT_APP_NOTIFICATION_API || 'http://localhost:5000';
 
 async function api(url, options = {}) {
   const res = await fetch(url, options);

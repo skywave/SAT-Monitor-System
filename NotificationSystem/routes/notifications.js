@@ -1,58 +1,18 @@
+var express = require('express');
+var router = express.Router();
+var notificationService = require('../services/notificationService');
+var supabase = require('../services/supabaseService');
+
 /**
- * routes/notifications.js
- *
- * GET  /notifications/config                    — view active channel config
- * POST /notifications/test/email                — send a test email
- * POST /notifications/test/webhook              — send a test webhook
- * POST /notifications/send                      — manually dispatch a notification
- *
- * --- Alert history (frontend) ---
- * GET  /notifications/history                   — all alerts sent
- * GET  /notifications/history/:trunkId          — alerts for a specific trunk
- * GET  /notifications/summary                   — counts by type/severity
- * GET  /notifications/recent                    — last 10 alerts
- *
- * --- Recipients management (frontend) ---
- * GET    /notifications/recipients              — list all recipients
- * POST   /notifications/recipients              — add a recipient
- * PUT    /notifications/recipients/:id          — update a recipient
- * DELETE /notifications/recipients/:id          — remove a recipient
- *
- * --- Per-client threshold config (frontend) ---
- * GET    /notifications/thresholds              — list all trunk threshold configs
- * GET    /notifications/thresholds/:trunkId     — get config for one trunk
- * PUT    /notifications/thresholds/:trunkId     — create or update config for a trunk
- * DELETE /notifications/thresholds/:trunkId     — reset trunk to default thresholds
+ * ──────────────────────────────────────────────────────────
+ * Notifications Router
+ * ──────────────────────────────────────────────────────────
  */
 
-const express             = require('express');
-const router              = express.Router();
-const notificationService = require('../services/notificationService');
-const supabase            = require('../services/supabaseService');
-
-// ── Config ────────────────────────────────────────────────────────────────────
-router.get('/config', function(req, res) {
+// ── Test endpoint ─────────────────────────────────────────────────────────────
+router.post('/test', async function(req, res) {
   try {
-    var result = notificationService.getConfig();
-    res.json(result);
-  } catch (err) {
-    res.status(500).json({ success: false, error: err.message });
-  }
-});
-
-// ── Test channels ─────────────────────────────────────────────────────────────
-router.post('/test/email', async function(req, res) {
-  try {
-    var result = await notificationService.testEmail(req.body.to);
-    res.json(result);
-  } catch (err) {
-    res.status(500).json({ success: false, error: err.message });
-  }
-});
-
-router.post('/test/webhook', async function(req, res) {
-  try {
-    var result = await notificationService.testWebhook();
+    var result = await notificationService.sendTestAlert(req.body.email);
     res.json(result);
   } catch (err) {
     res.status(500).json({ success: false, error: err.message });
@@ -75,6 +35,10 @@ router.get('/history', async function(req, res) {
     var limit  = parseInt(req.query.limit)  || 50;
     var offset = parseInt(req.query.offset) || 0;
 
+    if (!db) {
+      return res.json({ success: true, total: 0, alerts: [] });
+    }
+
     var result = await db
       .from('alerts_sent')
       .select('*')
@@ -91,6 +55,10 @@ router.get('/history', async function(req, res) {
 router.get('/history/:trunkId', async function(req, res) {
   try {
     var db = supabase.getClient();
+    if (!db) {
+      return res.json({ success: true, trunkId: req.params.trunkId, total: 0, alerts: [] });
+    }
+
     var result = await db
       .from('alerts_sent')
       .select('*')
@@ -107,7 +75,11 @@ router.get('/history/:trunkId', async function(req, res) {
 
 router.get('/summary', async function(req, res) {
   try {
-    var db     = supabase.getClient();
+    var db = supabase.getClient();
+    if (!db) {
+      return res.json({ success: true, total: 0, last24h: 0, byType: {}, bySeverity: {} });
+    }
+
     var result = await db.from('alerts_sent').select('alert_type, severity, sent_at');
     if (result.error) throw new Error(result.error.message);
 
@@ -130,7 +102,11 @@ router.get('/summary', async function(req, res) {
 
 router.get('/recent', async function(req, res) {
   try {
-    var db     = supabase.getClient();
+    var db = supabase.getClient();
+    if (!db) {
+      return res.json({ success: true, alerts: [] });
+    }
+
     var result = await db
       .from('alerts_sent')
       .select('id, trunk_name, alert_type, severity, message, sent_at')
@@ -149,7 +125,11 @@ router.get('/recent', async function(req, res) {
 // GET /notifications/recipients?trunkId=SBC
 router.get('/recipients', async function(req, res) {
   try {
-    var db    = supabase.getClient();
+    var db = supabase.getClient();
+    if (!db) {
+      return res.json({ success: true, total: 0, recipients: [] });
+    }
+
     var query = db.from('notification_recipients').select('*').order('created_at', { ascending: false });
     if (req.query.trunkId) query = query.eq('trunk_id', req.query.trunkId);
 
@@ -162,12 +142,14 @@ router.get('/recipients', async function(req, res) {
 });
 
 // POST /notifications/recipients
-// Body: { name, email, trunk_id, enabled }
-// trunk_id = 'all' means this person gets alerts for every trunk
 router.post('/recipients', async function(req, res) {
   try {
     var db   = supabase.getClient();
     var body = req.body;
+
+    if (!db) {
+      return res.status(400).json({ success: false, error: 'Database (Supabase) not configured' });
+    }
 
     if (!body.name || !body.email) {
       return res.status(400).json({ success: false, error: 'name and email are required' });
@@ -188,12 +170,14 @@ router.post('/recipients', async function(req, res) {
 });
 
 // PUT /notifications/recipients/:id
-// Body: any of { name, email, trunk_id, enabled }
 router.put('/recipients/:id', async function(req, res) {
   try {
     var db     = supabase.getClient();
-    var update = {};
+    if (!db) {
+      return res.status(400).json({ success: false, error: 'Database (Supabase) not configured' });
+    }
 
+    var update = {};
     if (req.body.name     !== undefined) update.name     = req.body.name;
     if (req.body.email    !== undefined) update.email    = req.body.email;
     if (req.body.trunk_id !== undefined) update.trunk_id = req.body.trunk_id;
@@ -217,6 +201,10 @@ router.put('/recipients/:id', async function(req, res) {
 router.delete('/recipients/:id', async function(req, res) {
   try {
     var db     = supabase.getClient();
+    if (!db) {
+      return res.status(400).json({ success: false, error: 'Database (Supabase) not configured' });
+    }
+
     var result = await db.from('notification_recipients').delete().eq('id', req.params.id);
     if (result.error) throw new Error(result.error.message);
     res.json({ success: true, message: 'Recipient removed' });
@@ -230,7 +218,11 @@ router.delete('/recipients/:id', async function(req, res) {
 // GET /notifications/thresholds
 router.get('/thresholds', async function(req, res) {
   try {
-    var db     = supabase.getClient();
+    var db = supabase.getClient();
+    if (!db) {
+      return res.json({ success: true, total: 0, thresholds: [] });
+    }
+
     var result = await db.from('threshold_configs').select('*').order('trunk_name');
     if (result.error) throw new Error(result.error.message);
     res.json({ success: true, total: result.data.length, thresholds: result.data });
@@ -240,10 +232,28 @@ router.get('/thresholds', async function(req, res) {
 });
 
 // GET /notifications/thresholds/:trunkId
-// Returns custom config if it exists, otherwise returns system defaults
 router.get('/thresholds/:trunkId', async function(req, res) {
   try {
-    var db     = supabase.getClient();
+    var db = supabase.getClient();
+    if (!db) {
+      return res.json({
+        success:    true,
+        trunkId:    req.params.trunkId,
+        isDefault:  true,
+        thresholds: {
+          trunk_id:             req.params.trunkId,
+          latency_max:          150,
+          bandwidth_max:        10000,
+          concurrent_calls_max: 50,
+          failed_calls_max:     5,
+          no_answer_max:        10,
+          rejected_max:         5,
+          consecutive_failures: 2,
+          cooldown_minutes:     30,
+        },
+      });
+    }
+
     var result = await db
       .from('threshold_configs')
       .select('*')
@@ -277,13 +287,13 @@ router.get('/thresholds/:trunkId', async function(req, res) {
 });
 
 // PUT /notifications/thresholds/:trunkId
-// Creates or updates threshold config for a trunk
-// Body: { trunk_name, latency_max, bandwidth_max, concurrent_calls_max,
-//         failed_calls_max, no_answer_max, rejected_max,
-//         consecutive_failures, cooldown_minutes }
 router.put('/thresholds/:trunkId', async function(req, res) {
   try {
     var db   = supabase.getClient();
+    if (!db) {
+      return res.status(400).json({ success: false, error: 'Database (Supabase) not configured' });
+    }
+
     var body = req.body;
 
     var record = {
@@ -313,10 +323,13 @@ router.put('/thresholds/:trunkId', async function(req, res) {
 });
 
 // DELETE /notifications/thresholds/:trunkId
-// Removes custom config — trunk falls back to system defaults
 router.delete('/thresholds/:trunkId', async function(req, res) {
   try {
-    var db     = supabase.getClient();
+    var db = supabase.getClient();
+    if (!db) {
+      return res.status(400).json({ success: false, error: 'Database (Supabase) not configured' });
+    }
+
     var result = await db.from('threshold_configs').delete().eq('trunk_id', req.params.trunkId);
     if (result.error) throw new Error(result.error.message);
     res.json({ success: true, message: 'Custom thresholds removed — trunk will use system defaults' });

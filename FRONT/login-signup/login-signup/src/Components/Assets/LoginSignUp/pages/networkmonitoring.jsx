@@ -18,33 +18,33 @@ const getLatencyQuality = (latency) => {
 };
 
 const qualityClass = (q) => {
-  if (q === 'Excellent') return 'text-emerald-400';
-  if (q === 'Good') return 'text-sky-400';
-  if (q === 'Fair') return 'text-amber-400';
-  if (q === 'Poor') return 'text-red-400';
-  return 'text-zinc-500';
+  if (q === 'Excellent') return 'text-emerald-600';
+  if (q === 'Good') return 'text-blue-600';
+  if (q === 'Fair') return 'text-amber-600';
+  if (q === 'Poor') return 'text-red-600';
+  return 'text-slate-500';
 };
 
 const StatusBadge = ({ status }) => {
   const map = {
-    up: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20',
-    reachable: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20',
-    warning: 'bg-amber-500/10 text-amber-400 border-amber-500/20',
-    down: 'bg-red-500/10 text-red-400 border-red-500/20',
-    unreachable: 'bg-red-500/10 text-red-400 border-red-500/20',
+    up: 'bg-emerald-50 text-emerald-700 border-emerald-200',
+    reachable: 'bg-emerald-50 text-emerald-700 border-emerald-200',
+    warning: 'bg-amber-50 text-amber-700 border-amber-200',
+    down: 'bg-red-50 text-red-700 border-red-200',
+    unreachable: 'bg-red-50 text-red-700 border-red-200',
   };
   return (
-    <span className={`inline-flex items-center gap-1.5 px-2 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest border ${map[status] || 'bg-zinc-800 text-zinc-400 border-zinc-700'}`}>
-      {status === 'up' || status === 'reachable' ? <CheckCircle2 className="w-3 h-3" /> : <AlertCircle className="w-3 h-3" />}
+    <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold uppercase tracking-wider border ${map[status] || 'bg-slate-100 text-slate-700 border-slate-200'}`}>
+      {status === 'up' || status === 'reachable' ? <CheckCircle2 className="w-3.5 h-3.5" /> : <AlertCircle className="w-3.5 h-3.5" />}
       {status}
     </span>
   );
 };
 
 const Card = ({ title, icon: Icon, children }) => (
-  <div className="bg-[#0A0A0A] border border-zinc-800 rounded-xl overflow-hidden">
-    <h3 className="px-6 py-4 text-xs font-bold text-zinc-400 uppercase tracking-widest flex items-center gap-2 border-b border-zinc-800">
-      <Icon className="w-4 h-4 text-purple-400" /> {title}
+  <div className="bg-white border border-slate-200 rounded-xl overflow-hidden shadow-sm">
+    <h3 className="px-6 py-4 text-xs font-bold text-slate-700 uppercase tracking-wider flex items-center gap-2 border-b border-slate-200 bg-slate-50">
+      <Icon className="w-4 h-4 text-blue-600" /> {title}
     </h3>
     <div className="p-6">{children}</div>
   </div>
@@ -123,14 +123,14 @@ const NetworkMonitoring = () => {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-white">Network Topology</h1>
-          <p className="text-zinc-500 text-sm">Live reachability, latency, and call metrics</p>
+          <h1 className="text-2xl font-bold text-slate-900">Network Topology</h1>
+          <p className="text-slate-500 text-sm">Live reachability, latency, and call metrics</p>
         </div>
         <motion.button
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.97 }}
           onClick={fetchData}
-          className="p-2 text-zinc-500 hover:text-white border border-zinc-800 rounded-lg"
+          className="p-2.5 text-slate-600 hover:text-slate-900 bg-white border border-slate-200 rounded-lg shadow-sm"
         >
           <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
         </motion.button>
@@ -138,13 +138,13 @@ const NetworkMonitoring = () => {
 
       <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <Card title="Trunk Health" icon={Server}>
-          <div className="divide-y divide-zinc-800 -m-6">
-            {trunks.length === 0 && <p className="p-6 text-sm text-zinc-500">No trunk data available</p>}
+          <div className="divide-y divide-slate-100 -m-6">
+            {trunks.length === 0 && <p className="p-6 text-sm text-slate-500">No trunk data available</p>}
             {trunks.map((trunk) => (
               <div key={trunk.id} className="px-6 py-4 flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-zinc-200">{trunk.name}</p>
-                  <p className="text-xs text-zinc-500 font-mono">{trunk.latency ? `${trunk.latency}ms` : 'N/A'}</p>
+                  <p className="text-sm font-semibold text-slate-900">{trunk.name}</p>
+                  <p className="text-xs text-slate-500 font-mono">{trunk.latency ? `${trunk.latency}ms` : 'N/A'}</p>
                 </div>
                 <StatusBadge status={trunk.status} />
               </div>
@@ -155,8 +155,8 @@ const NetworkMonitoring = () => {
         <Card title="IP Reachability" icon={Activity}>
           <div className="grid grid-cols-2 gap-3">
             {Object.entries(reachability).map(([target, status]) => (
-              <div key={target} className="p-3 rounded-lg border border-zinc-800 bg-zinc-900/40">
-                <p className="text-[10px] uppercase tracking-widest text-zinc-500 mb-2">{target}</p>
+              <div key={target} className="p-3.5 rounded-lg border border-slate-200 bg-slate-50">
+                <p className="text-xs uppercase tracking-wider font-semibold text-slate-500 mb-2">{target}</p>
                 <StatusBadge status={status} />
               </div>
             ))}
@@ -166,20 +166,20 @@ const NetworkMonitoring = () => {
         <Card title="Link Latency" icon={Zap}>
           <table className="w-full text-sm">
             <thead>
-              <tr className="text-[10px] uppercase tracking-widest text-zinc-500">
-                <th className="text-left pb-3">Destination</th>
-                <th className="text-right pb-3">RTT</th>
-                <th className="text-right pb-3">Quality</th>
+              <tr className="text-xs uppercase tracking-wider text-slate-500 border-b border-slate-200">
+                <th className="text-left pb-3 font-semibold">Destination</th>
+                <th className="text-right pb-3 font-semibold">RTT</th>
+                <th className="text-right pb-3 font-semibold">Quality</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-zinc-800">
+            <tbody className="divide-y divide-slate-100">
               {Object.entries(latency).map(([target, val]) => {
                 const q = getLatencyQuality(val);
                 return (
-                  <tr key={target}>
-                    <td className="py-3 capitalize text-zinc-300">{target}</td>
-                    <td className="py-3 text-right font-mono tabular-nums">{val > 0 ? `${val}ms` : 'N/A'}</td>
-                    <td className={`py-3 text-right text-xs font-bold ${qualityClass(q)}`}>{q}</td>
+                  <tr key={target} className="hover:bg-slate-50">
+                    <td className="py-3.5 capitalize text-slate-900 font-medium">{target}</td>
+                    <td className="py-3.5 text-right font-mono tabular-nums text-slate-600">{val > 0 ? `${val}ms` : 'N/A'}</td>
+                    <td className={`py-3.5 text-right text-xs font-bold ${qualityClass(q)}`}>{q}</td>
                   </tr>
                 );
               })}
@@ -188,17 +188,17 @@ const NetworkMonitoring = () => {
         </Card>
 
         <Card title="Call Statistics" icon={Phone}>
-          <div className="grid grid-cols-1 gap-3">
+          <div className="grid grid-cols-1 gap-4">
             {sides.map((side) => {
               const stats = callStats[side.key] || {};
               return (
-                <div key={side.key} className="p-3 rounded-lg border border-zinc-800">
-                  <p className="text-[10px] uppercase tracking-widest text-zinc-500 mb-2">{side.label}</p>
+                <div key={side.key} className="p-4 rounded-lg border border-slate-200 bg-slate-50">
+                  <p className="text-xs uppercase tracking-wider font-semibold text-slate-500 mb-3">{side.label}</p>
                   <div className="grid grid-cols-4 gap-2 text-center">
                     {['active', 'failed', 'unanswered', 'rejected'].map((k) => (
-                      <div key={k}>
-                        <p className={`text-lg font-bold tabular-nums ${k === 'failed' ? 'text-red-400' : 'text-white'}`}>{stats[k] ?? 0}</p>
-                        <p className="text-[10px] text-zinc-500 uppercase">{k}</p>
+                      <div key={k} className="bg-white p-2.5 rounded-lg border border-slate-200 shadow-sm">
+                        <p className={`text-lg font-bold tabular-nums ${k === 'failed' ? 'text-red-600' : 'text-slate-900'}`}>{stats[k] ?? 0}</p>
+                        <p className="text-[10px] text-slate-500 uppercase tracking-wider font-semibold">{k}</p>
                       </div>
                     ))}
                   </div>

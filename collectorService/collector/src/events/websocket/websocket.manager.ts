@@ -39,6 +39,8 @@ export class WebSocketManager implements OnModuleInit, OnModuleDestroy {
   }
 
   private async connectAll() {
+    this.logger.log('WebSocket connections disabled. Using REST API polling exclusively.');
+    return;
     // 1. Get all configured PBX instances
     const instances = this.pbxManager.getAllInstances(); // Assumes this method exists
     

@@ -177,9 +177,10 @@ export class MonitoringService implements OnModuleDestroy {
   private async writeTrunkStatuses(trunks: any[]): Promise<void> {
     for (const trunk of trunks) {
       try {
-        const trunkId = String(trunk.id);
-        const trunkName = trunk.name;
-        const status = trunk.status || 1;
+        const trunkId = String(trunk.id || trunk.trunk_id || '1');
+        const trunkName = trunk.name || trunk.trunk_name || 'Trunk';
+        const rawStatus = trunk.raw_status !== undefined ? trunk.raw_status : (typeof trunk.status === 'number' ? trunk.status : 1);
+        const status = typeof rawStatus === 'number' ? rawStatus : 1;
         const previousState = this.previousTrunkStates.get(trunkId);
 
         // Status change detection

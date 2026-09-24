@@ -45,26 +45,26 @@ const Dashboard = () => {
         animate={{ opacity: 1, y: 0 }}
         className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8"
       >
-        <SummaryCard label="Total Trunks" value={totalTrunks} icon={<Server />} />
-        <SummaryCard label="Trunks UP" value={trunksUp} icon={<CheckCircle2 />} color="text-emerald-500" />
-        <SummaryCard label="Trunks DOWN" value={trunksDown} icon={<AlertCircle />} color="text-red-500" />
-        <SummaryCard label="Latency" value={`${networkStatus.avgLatency}ms`} icon={<Activity />} sub={networkStatus.status} />
+        <SummaryCard label="Total Trunks" value={totalTrunks} icon={<Server className="w-5 h-5 text-blue-600" />} />
+        <SummaryCard label="Trunks UP" value={trunksUp} icon={<CheckCircle2 className="w-5 h-5 text-emerald-600" />} color="text-emerald-600" />
+        <SummaryCard label="Trunks DOWN" value={trunksDown} icon={<AlertCircle className="w-5 h-5 text-red-600" />} color="text-red-600" />
+        <SummaryCard label="Latency" value={`${networkStatus.avgLatency}ms`} icon={<Activity className="w-5 h-5 text-blue-600" />} sub={networkStatus.status} />
       </motion.div>
 
       <motion.div 
         initial={{ opacity: 0, scale: 0.98 }}
         animate={{ opacity: 1, scale: 1 }}
-        className="relative z-10 bg-[#0A0A0A] border border-zinc-800 rounded-xl overflow-hidden"
+        className="relative z-10 bg-white border border-slate-200 rounded-xl overflow-hidden shadow-sm"
       >
         <table className="w-full text-left">
-          <thead className="bg-zinc-900/50 border-b border-zinc-800">
+          <thead className="bg-slate-50 border-b border-slate-200">
             <tr>
               {['Trunk Name', 'Status', 'Latency', 'Last Changed'].map(h => (
-                <th key={h} className="p-4 text-xs uppercase text-zinc-500 tracking-widest font-mono">{h}</th>
+                <th key={h} className="p-4 text-xs uppercase text-slate-500 tracking-wider font-semibold">{h}</th>
               ))}
             </tr>
           </thead>
-          <tbody className="divide-y divide-zinc-800">
+          <tbody className="divide-y divide-slate-100">
             <AnimatePresence>
               {trunks.map(trunk => (
                 <motion.tr 
@@ -72,19 +72,24 @@ const Dashboard = () => {
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   exit={{ opacity: 0 }}
-                  className="hover:bg-zinc-900/50 transition-colors cursor-pointer"
+                  className="hover:bg-slate-50 transition-colors cursor-pointer"
                 >
-                  <td className="p-4 font-medium">{trunk.name}</td>
+                  <td className="p-4 font-medium text-slate-900">{trunk.name}</td>
                   <td className="p-4">
-                    <span className={`inline-flex items-center gap-1.5 px-2 py-1 rounded-full text-xs font-medium ${trunk.status === 'up' ? 'bg-emerald-500/10 text-emerald-500' : 'bg-red-500/10 text-red-500'}`}>
-                      {trunk.status === 'up' ? <CheckCircle2 className="w-3 h-3" /> : <AlertCircle className="w-3 h-3" />}
+                    <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold ${trunk.status === 'up' ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-red-50 text-red-700 border border-red-200'}`}>
+                      {trunk.status === 'up' ? <CheckCircle2 className="w-3.5 h-3.5" /> : <AlertCircle className="w-3.5 h-3.5" />}
                       {trunk.status.toUpperCase()}
                     </span>
                   </td>
-                  <td className="p-4 font-mono text-sm text-zinc-400">{trunk.latency || '—'}ms</td>
-                  <td className="p-4 text-sm text-zinc-400">{trunk.lastChanged || '—'}</td>
+                  <td className="p-4 font-mono text-sm text-slate-600">{trunk.latency || '—'}ms</td>
+                  <td className="p-4 text-sm text-slate-600">{trunk.lastChanged || '—'}</td>
                 </motion.tr>
               ))}
+              {trunks.length === 0 && !loading && (
+                <tr>
+                  <td colSpan="4" className="p-8 text-center text-slate-500 text-sm">No trunk data available</td>
+                </tr>
+              )}
             </AnimatePresence>
           </tbody>
         </table>
@@ -93,17 +98,17 @@ const Dashboard = () => {
   );
 };
 
-const SummaryCard = ({ label, value, icon, color = "text-white", sub }) => (
+const SummaryCard = ({ label, value, icon, color = "text-slate-900", sub }) => (
   <motion.div
-    whileHover={{ y: -4 }}
-    className="bg-zinc-900/50 border border-zinc-800 p-6 rounded-xl flex items-center justify-between"
+    whileHover={{ y: -2 }}
+    className="bg-white border border-slate-200 p-6 rounded-xl flex items-center justify-between shadow-sm"
   >
     <div>
-      <p className="text-xs text-zinc-500 uppercase tracking-widest font-mono mb-1">{label}</p>
+      <p className="text-xs text-slate-500 uppercase tracking-wider font-semibold mb-1">{label}</p>
       <h3 className={`text-2xl font-bold ${color}`}>{value}</h3>
-      {sub && <p className="text-xs text-zinc-500 mt-1">{sub}</p>}
+      {sub && <p className="text-xs text-slate-400 mt-1 capitalize">{sub}</p>}
     </div>
-    <div className="text-zinc-600">{icon}</div>
+    <div className="p-3 bg-slate-50 rounded-xl border border-slate-100">{icon}</div>
   </motion.div>
 );
 

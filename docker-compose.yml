@@ -6,7 +6,7 @@ services:
     container_name: sat-postgres
     environment:
       POSTGRES_USER: satmonitor
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_PASSWORD: satmonitor123
       POSTGRES_DB: sat_monitor
     ports:
       - "5434:5432"
@@ -79,9 +79,8 @@ services:
       - "8081:80"
     depends_on:
       - main-collector
-      - frontend-builder
     volumes:
-      - frontend_build:/usr/share/nginx/html:ro
+      - ./FRONT/login-signup/login-signup/build:/usr/share/nginx/html
     networks:
       - sat-network
     restart: unless-stopped
