@@ -6,7 +6,6 @@
  */
 
 import axios, { AxiosInstance } from 'axios'
-import crypto from 'crypto'
 
 export interface TokenResponse {
   errcode: number
@@ -62,7 +61,7 @@ export class PBX {
 
     const response = await this.axiosInstance.post<TokenResponse>('get_token', {
       username: this.username,
-      password: crypto.createHash('md5').update(this.password).digest('hex')
+      password: this.password
     })
 
     if (response.data.errcode !== 0) {
