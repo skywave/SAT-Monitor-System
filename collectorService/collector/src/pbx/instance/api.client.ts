@@ -60,7 +60,7 @@ export class PBX {
         console.error('[PBX] Failed to check outgoing IP:', error.message)  
     }
 
-    const response = await this.axiosInstance.post<TokenResponse>('token', {
+    const response = await this.axiosInstance.post<TokenResponse>('get_token', {
       username: this.username,
       password: crypto.createHash('md5').update(this.password).digest('hex')
     })
